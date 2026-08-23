@@ -61,18 +61,69 @@ function require_role($role) {
     require_login();
     if (!has_role($role)) {
         // Log unauthorized access attempt here if needed
-        if (has_role('admin')) {
-            redirect('/admin/dashboard.php');
-        } else {
-            redirect('/user/dashboard.php');
+        redirect('/public/403.php');
+    }
+}
+
+/**
+ * Verify remember me token if session doesn't exist
+ * @param PDO $pdo
+ */
+function verify_remember_me($pdo) {
+    if (!is_logged_in() && isset($_COOKIE['remember_me'])) {
+        $parts = explode(':', $_COOKIE['remember_me']);
+        if (count($parts) !== 2) {
+            return;
+        }
+        list($selector, $validator) = $parts;
+
+        $stmt = $pdo->prepare("SELECT * FROM auth_tokens WHERE selector = ? AND expires_at >= NOW()");
+        $stmt->execute([$selector]);
+        $token = $stmt->fetch();
+
+        if ($token && hash_equals($token['hashed_validator'], hash('sha256', $validator))) {
+            // Get user details
+            $userStmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND status = 'active' AND deleted_at IS NULL");
+            $userStmt->execute([$token['user_id']]);
+            $user = $userStmt->fetch();
+
+            if ($user) {
+                // Log them in
+                regenerate_session();
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['name'] = $user['name'];
+
+                // Update last login
+                $update = $pdo->prepare("UPDATE users SET last_login_at = NOW() WHERE id = ?");
+                $update->execute([$user['id']]);
+            }
         }
     }
 }
 
 /**
- * Logs out the current user and destroys the session
+ * Helper to get the PDO instance inside session if needed, avoiding globals when possible
+ * This is just a proxy to getDB() if it's already loaded, else it assumes caller passes PDO
  */
-function logout_user() {
+
+/**
+ * Logs out the current user and destroys the session and remember me tokens
+ */
+function logout_user($pdo = null) {
+    if ($pdo && isset($_COOKIE['remember_me'])) {
+        $parts = explode(':', $_COOKIE['remember_me']);
+        if (count($parts) === 2) {
+            list($selector, $validator) = $parts;
+            $stmt = $pdo->prepare("DELETE FROM auth_tokens WHERE selector = ?");
+            $stmt->execute([$selector]);
+        }
+    }
+
+    if (isset($_COOKIE['remember_me'])) {
+        setcookie('remember_me', '', time() - 3600, '/', '', false, true);
+    }
+
     $_SESSION = [];
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
