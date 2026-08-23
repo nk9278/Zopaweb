@@ -31,6 +31,11 @@ function get_website_data($pdo, $website_id) {
         return null;
     }
 
+    // Fetch Custom Theme Data
+    $theme_stmt = $pdo->prepare("SELECT * FROM website_themes WHERE website_id = ?");
+    $theme_stmt->execute([$website_id]);
+    $theme_settings = $theme_stmt->fetch(PDO::FETCH_ASSOC);
+
     // 2. Fetch Theme/Template Data
     $template_stmt = $pdo->prepare("SELECT * FROM templates WHERE id = ?");
     $template_stmt->execute([$website['template_id']]);
@@ -73,6 +78,7 @@ function get_website_data($pdo, $website_id) {
     return [
         'site' => $website,
         'template' => $template,
+        'theme_settings' => $theme_settings ?: [],
         'business' => $business,
         'services' => $services,
         'gallery' => $gallery,
@@ -226,11 +232,23 @@ function render_page($template, $data, $page = 'home') {
         return;
     }
 
+    // Load manifest to get defaults
+    $manifest = json_decode(file_get_contents(__DIR__ . "/../templates/{$safe_folder}/template.json"), true) ?: [];
+    $theme_defaults = $manifest['theme_defaults'] ?? [];
+
+    $theme_settings = $data['theme_settings'] ?? [];
+    $theme_css = generate_theme_css($theme_settings, $theme_defaults);
+    $google_fonts_url = generate_google_fonts_url($theme_settings, $theme_defaults);
+
     // Engine provides scoped variables for template.php to use.
     $engine = [
         'folder' => $safe_folder,
         'page_file' => $page_file,
-        'data' => $data
+        'data' => $data,
+        'theme_css' => $theme_css,
+        'google_fonts_url' => $google_fonts_url,
+        'theme_settings' => $theme_settings,
+        'theme_defaults' => $theme_defaults
     ];
 
     // Delegate rendering control to the template's master file.
@@ -286,4 +304,133 @@ function render_404() {
         echo "<h1>404 Not Found</h1><p>The page you requested does not exist.</p>";
         echo "</body></html>";
     }
+}
+
+
+/**
+ * Generates the safe theme CSS block based on custom settings and defaults.
+ * @param array $settings User's custom settings from website_themes
+ * @param array $defaults Template defaults from template.json
+ * @return string CSS <style> block
+ */
+function generate_theme_css($settings, $defaults) {
+    $css_vars = [];
+
+    // Valid color mapping
+    $color_keys = [
+        'primary_color', 'secondary_color', 'accent_color', 'background_color',
+        'surface_color', 'text_color', 'heading_color', 'muted_color',
+        'button_color', 'button_text_color', 'border_color'
+    ];
+
+    foreach ($color_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['colors'][$key] ?? null);
+        if ($val) {
+            // Very strict validation: must be a hex color
+            if (preg_match('/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $val)) {
+                $css_var_name = '--' . str_replace('_', '-', $key);
+                $css_vars[] = "    {$css_var_name}: {$val};";
+            }
+        }
+    }
+
+    // Typography mapping
+    $font_keys = ['heading_font', 'body_font', 'accent_font'];
+    $allowed_fonts = [
+        'Poppins' => "'Poppins', sans-serif",
+        'Inter' => "'Inter', sans-serif",
+        'Playfair Display' => "'Playfair Display', serif",
+        'DM Sans' => "'DM Sans', sans-serif",
+        'Montserrat' => "'Montserrat', sans-serif",
+        'Cormorant Garamond' => "'Cormorant Garamond', serif",
+        'Lora' => "'Lora', serif",
+        'Manrope' => "'Manrope', sans-serif",
+        'Outfit' => "'Outfit', sans-serif",
+        'Libre Baskerville' => "'Libre Baskerville', serif",
+        'Lato' => "'Lato', sans-serif"
+    ];
+
+    foreach ($font_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val && isset($allowed_fonts[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$allowed_fonts[$val]};";
+        }
+    }
+
+    // Scale mapping
+    $scale_keys = ['heading_scale', 'body_scale'];
+    $allowed_scales = [
+        'Small' => '0.9',
+        'Medium' => '1',
+        'Large' => '1.1'
+    ];
+
+    foreach ($scale_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val && isset($allowed_scales[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$allowed_scales[$val]};";
+        }
+    }
+
+    // Styles (buttons, border radius, etc. mapping)
+    // Map abstract names to actual CSS values where possible, or just export the abstract name and handle in CSS
+    $style_keys = [
+        'border_radius' => [
+            'Sharp' => '0px',
+            'Soft' => '4px',
+            'Rounded' => '8px',
+            'Pill' => '9999px'
+        ],
+        'shadow_style' => [
+            'None' => 'none',
+            'Subtle' => '0 2px 4px rgba(0,0,0,0.05)',
+            'Medium' => '0 4px 6px rgba(0,0,0,0.1)',
+            'Soft Luxury' => '0 10px 30px rgba(0,0,0,0.08)'
+        ]
+    ];
+
+    foreach ($style_keys as $key => $mapping) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['styles'][$key] ?? null);
+        if ($val && isset($mapping[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$mapping[$val]};";
+        }
+    }
+
+    if (empty($css_vars)) {
+        return '';
+    }
+
+    $css = "<style>\n:root {\n" . implode("\n", $css_vars) . "\n}\n</style>";
+    return $css;
+}
+
+/**
+ * Helper to get Google Fonts URL based on selected fonts
+ */
+function generate_google_fonts_url($settings, $defaults) {
+    $font_keys = ['heading_font', 'body_font', 'accent_font'];
+    $fonts_to_load = [];
+
+    foreach ($font_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val) {
+            $fonts_to_load[] = urlencode($val);
+        }
+    }
+
+    $fonts_to_load = array_unique(array_filter($fonts_to_load));
+
+    if (empty($fonts_to_load)) {
+        return '';
+    }
+
+    $family_str = '';
+    foreach ($fonts_to_load as $font) {
+        $family_str .= "family=" . $font . ":ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&";
+    }
+
+    return "https://fonts.googleapis.com/css2?{$family_str}display=swap";
 }

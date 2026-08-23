@@ -94,7 +94,7 @@ if ($template_id) {
 <div class="row g-3 mb-4">
     <?php
     $actions = [
-        ['icon' => 'bi-pencil-square', 'label' => 'Edit Website', 'color' => 'primary', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-palette2', 'label' => 'Appearance', 'color' => 'primary', 'link' => '/user/theme.php', 'disabled' => !$website],
         ['icon' => 'bi-eye', 'label' => 'Preview', 'color' => 'info', 'link' => $website ? '/public/site.php?website_id=' . $website['id'] : '#', 'disabled' => !$website, 'target' => '_blank'],
         ['icon' => 'bi-palette', 'label' => 'Templates', 'color' => 'success', 'link' => '/user/templates.php', 'disabled' => false],
         ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning', 'link' => '#', 'disabled' => true],
