@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/security.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/template_engine.php';
 require_once __DIR__ . '/../config/database.php';
 
 require_role('admin');
@@ -31,11 +32,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['tem
             log_activity($pdo, null, $_SESSION['user_id'], 'deleted_template', 'template', $template_id);
             set_flash_message('success', 'Template permanently deleted.');
         }
+    } elseif ($action === 'validate') {
+        $stmt = $pdo->prepare("SELECT folder_key FROM templates WHERE id = ?");
+        $stmt->execute([$template_id]);
+        $folder_key = $stmt->fetchColumn();
+        if ($folder_key) {
+            $validation = validate_template_manifest($folder_key);
+            if ($validation['valid']) {
+                set_flash_message('success', 'Validation passed! Template structure is correct.');
+            } else {
+                set_flash_message('error', 'Validation failed: ' . $validation['error']);
+            }
+        }
     } else {
         if ($action === 'activate') {
-            $stmt = $pdo->prepare("UPDATE templates SET status = 'active' WHERE id = ?");
+            // Automatically validate before activating
+            $stmt = $pdo->prepare("SELECT folder_key FROM templates WHERE id = ?");
             $stmt->execute([$template_id]);
-            set_flash_message('success', 'Template activated.');
+            $folder_key = $stmt->fetchColumn();
+
+            $validation = validate_template_manifest($folder_key);
+            if ($validation['valid']) {
+                $update = $pdo->prepare("UPDATE templates SET status = 'active' WHERE id = ?");
+                $update->execute([$template_id]);
+                set_flash_message('success', 'Template activated successfully.');
+            } else {
+                set_flash_message('error', 'Activation blocked. Validation failed: ' . $validation['error']);
+            }
         } elseif ($action === 'deactivate') {
             $stmt = $pdo->prepare("UPDATE templates SET status = 'inactive' WHERE id = ?");
             $stmt->execute([$template_id]);
@@ -163,6 +186,9 @@ $templates = $stmt->fetchAll();
                                                 <?php csrf_field(); ?>
                                                 <input type="hidden" name="template_id" value="<?= $tpl['id'] ?>">
 
+                                                <li><button type="submit" name="action" value="validate" class="dropdown-item text-info"><i class="bi bi-shield-check me-2"></i>Validate Structure</button></li>
+                                                <li><a href="/admin/template_preview.php?id=<?= $tpl['id'] ?>" class="dropdown-item text-primary" target="_blank"><i class="bi bi-eye me-2"></i>Live Preview</a></li>
+                                                <li><hr class="dropdown-divider"></li>
                                                 <?php if ($tpl['status'] !== 'active'): ?>
                                                     <li><button type="submit" name="action" value="activate" class="dropdown-item text-success"><i class="bi bi-play-circle me-2"></i>Activate</button></li>
                                                 <?php endif; ?>

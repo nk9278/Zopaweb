@@ -1,0 +1,13 @@
+{
+    "name": "Glamour",
+    "slug": "glamour",
+    "version": "1.0.0",
+    "category": "makeup-artist",
+    "description": "Bold and glamorous portfolio theme for fashion and editorial artists.",
+    "author": "ZopaWeb",
+    "supports": {
+        "hero": true,
+        "gallery": true,
+        "services": true
+    }
+}

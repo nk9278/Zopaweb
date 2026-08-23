@@ -1,67 +1,169 @@
-[Sun Aug 23 11:47:07 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
-[Sun Aug 23 11:47:11 2026] [::1]:38386 Accepted
-[Sun Aug 23 11:47:11 2026] [::1]:38386 [200]: GET /auth/login.php
-[Sun Aug 23 11:47:11 2026] [::1]:38386 Closing
-[Sun Aug 23 11:47:11 2026] [::1]:38394 Accepted
-[Sun Aug 23 11:47:11 2026] [::1]:38406 Accepted
-[Sun Aug 23 11:47:11 2026] [::1]:38394 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:11 2026] [::1]:38406 [200]: GET /assets/js/auth.js
-[Sun Aug 23 11:47:11 2026] [::1]:38394 Closing
-[Sun Aug 23 11:47:11 2026] [::1]:38406 Closing
-[Sun Aug 23 11:47:12 2026] [::1]:38408 Accepted
-[Sun Aug 23 11:47:12 2026] [::1]:38408 [302]: POST /auth/login.php
-[Sun Aug 23 11:47:12 2026] [::1]:38408 Closing
-[Sun Aug 23 11:47:12 2026] [::1]:38422 Accepted
-[Sun Aug 23 11:47:12 2026] [::1]:38422 [200]: GET /admin/dashboard.php
-[Sun Aug 23 11:47:12 2026] [::1]:38422 Closing
-[Sun Aug 23 11:47:12 2026] [::1]:38424 Accepted
-[Sun Aug 23 11:47:12 2026] [::1]:38440 Accepted
-[Sun Aug 23 11:47:12 2026] [::1]:38424 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:12 2026] [::1]:38440 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:12 2026] [::1]:38424 Closing
-[Sun Aug 23 11:47:12 2026] [::1]:38440 Closing
-[Sun Aug 23 11:47:14 2026] [::1]:38448 Accepted
-[Sun Aug 23 11:47:14 2026] [::1]:38448 [200]: GET /admin/templates.php
-[Sun Aug 23 11:47:14 2026] [::1]:38448 Closing
-[Sun Aug 23 11:47:14 2026] [::1]:38452 Accepted
-[Sun Aug 23 11:47:14 2026] [::1]:38458 Accepted
-[Sun Aug 23 11:47:14 2026] [::1]:38452 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:14 2026] [::1]:38458 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:14 2026] [::1]:38452 Closing
-[Sun Aug 23 11:47:14 2026] [::1]:38458 Closing
-[Sun Aug 23 11:47:15 2026] [::1]:38466 Accepted
-[Sun Aug 23 11:47:15 2026] [::1]:38466 [200]: GET /admin/template_view.php
-[Sun Aug 23 11:47:15 2026] [::1]:38466 Closing
-[Sun Aug 23 11:47:15 2026] [::1]:38476 Accepted
-[Sun Aug 23 11:47:15 2026] [::1]:38478 Accepted
-[Sun Aug 23 11:47:15 2026] [::1]:38476 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:15 2026] [::1]:38478 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:15 2026] [::1]:38476 Closing
-[Sun Aug 23 11:47:15 2026] [::1]:38478 Closing
-[Sun Aug 23 11:47:16 2026] [::1]:43798 Accepted
-[Sun Aug 23 11:47:16 2026] [::1]:43798 [200]: GET /admin/template_categories.php
-[Sun Aug 23 11:47:16 2026] [::1]:43798 Closing
-[Sun Aug 23 11:47:16 2026] [::1]:43802 Accepted
-[Sun Aug 23 11:47:16 2026] [::1]:43802 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:16 2026] [::1]:43802 Closing
-[Sun Aug 23 11:47:16 2026] [::1]:43818 Accepted
-[Sun Aug 23 11:47:16 2026] [::1]:43818 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:16 2026] [::1]:43818 Closing
-[Sun Aug 23 11:47:17 2026] [::1]:43830 Accepted
-[Sun Aug 23 11:47:17 2026] [::1]:43830 [200]: GET /admin/payments.php
-[Sun Aug 23 11:47:17 2026] [::1]:43830 Closing
-[Sun Aug 23 11:47:17 2026] [::1]:43842 Accepted
-[Sun Aug 23 11:47:17 2026] [::1]:43842 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:17 2026] [::1]:43842 Closing
-[Sun Aug 23 11:47:17 2026] [::1]:43852 Accepted
-[Sun Aug 23 11:47:17 2026] [::1]:43852 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:17 2026] [::1]:43852 Closing
-[Sun Aug 23 11:47:19 2026] [::1]:43868 Accepted
-[Sun Aug 23 11:47:19 2026] [::1]:43868 [200]: GET /admin/domains.php
-[Sun Aug 23 11:47:19 2026] [::1]:43868 Closing
-[Sun Aug 23 11:47:19 2026] [::1]:43870 Accepted
-[Sun Aug 23 11:47:19 2026] [::1]:43882 Accepted
-[Sun Aug 23 11:47:19 2026] [::1]:43870 [200]: GET /assets/css/style.css
-[Sun Aug 23 11:47:19 2026] [::1]:43870 Closing
-[Sun Aug 23 11:47:19 2026] [::1]:43882 [200]: GET /assets/js/admin.js
-[Sun Aug 23 11:47:19 2026] [::1]:43882 Closing
+[Sun Aug 23 12:35:06 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Sun Aug 23 12:35:10 2026] [::1]:53084 Accepted
+[Sun Aug 23 12:35:10 2026] [::1]:53084 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:10 2026] [::1]:53084 Closing
+[Sun Aug 23 12:35:10 2026] [::1]:53096 Accepted
+[Sun Aug 23 12:35:10 2026] [::1]:53108 Accepted
+[Sun Aug 23 12:35:10 2026] [::1]:53096 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:10 2026] [::1]:53096 Closing
+[Sun Aug 23 12:35:10 2026] [::1]:53108 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:10 2026] [::1]:53108 Closing
+[Sun Aug 23 12:35:12 2026] [::1]:53110 Accepted
+[Sun Aug 23 12:35:12 2026] [::1]:53110 [302]: POST /auth/login.php
+[Sun Aug 23 12:35:12 2026] [::1]:53110 Closing
+[Sun Aug 23 12:35:12 2026] [::1]:53112 Accepted
+[Sun Aug 23 12:35:12 2026] [::1]:53112 [200]: GET /admin/dashboard.php
+[Sun Aug 23 12:35:12 2026] [::1]:53112 Closing
+[Sun Aug 23 12:35:12 2026] [::1]:53118 Accepted
+[Sun Aug 23 12:35:12 2026] [::1]:53130 Accepted
+[Sun Aug 23 12:35:12 2026] [::1]:53118 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:12 2026] [::1]:53118 Closing
+[Sun Aug 23 12:35:12 2026] [::1]:53130 [200]: GET /assets/js/admin.js
+[Sun Aug 23 12:35:12 2026] [::1]:53130 Closing
+[Sun Aug 23 12:35:13 2026] [::1]:53142 Accepted
+[Sun Aug 23 12:35:13 2026] [::1]:53142 [200]: GET /admin/template_preview.php?id=1
+[Sun Aug 23 12:35:13 2026] [::1]:53142 Closing
+[Sun Aug 23 12:35:13 2026] [::1]:53152 Accepted
+[Sun Aug 23 12:35:13 2026] [::1]:53152 [200]: GET /templates/theme_elegance/assets/css/style.css
+[Sun Aug 23 12:35:13 2026] [::1]:53152 Closing
+[Sun Aug 23 12:35:15 2026] [::1]:53154 Accepted
+[Sun Aug 23 12:35:15 2026] [::1]:53154 [200]: GET /admin/template_preview.php?id=2
+[Sun Aug 23 12:35:15 2026] [::1]:53154 Closing
+[Sun Aug 23 12:35:17 2026] [::1]:53156 Accepted
+[Sun Aug 23 12:35:17 2026] [::1]:53156 [302]: GET /auth/logout.php
+[Sun Aug 23 12:35:17 2026] [::1]:53156 Closing
+[Sun Aug 23 12:35:17 2026] [::1]:53168 Accepted
+[Sun Aug 23 12:35:17 2026] [::1]:53168 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:17 2026] [::1]:53168 Closing
+[Sun Aug 23 12:35:17 2026] [::1]:53180 Accepted
+[Sun Aug 23 12:35:17 2026] [::1]:53196 Accepted
+[Sun Aug 23 12:35:17 2026] [::1]:53180 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:17 2026] [::1]:53196 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:17 2026] [::1]:53180 Closing
+[Sun Aug 23 12:35:17 2026] [::1]:53196 Closing
+[Sun Aug 23 12:35:18 2026] [::1]:53202 Accepted
+[Sun Aug 23 12:35:18 2026] [::1]:53202 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:18 2026] [::1]:53202 Closing
+[Sun Aug 23 12:35:18 2026] [::1]:53206 Accepted
+[Sun Aug 23 12:35:18 2026] [::1]:53216 Accepted
+[Sun Aug 23 12:35:18 2026] [::1]:53206 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:18 2026] [::1]:53206 Closing
+[Sun Aug 23 12:35:18 2026] [::1]:53216 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:18 2026] [::1]:53216 Closing
+[Sun Aug 23 12:35:19 2026] [::1]:34796 Accepted
+[Sun Aug 23 12:35:19 2026] [::1]:34796 [200]: POST /auth/login.php
+[Sun Aug 23 12:35:19 2026] [::1]:34796 Closing
+[Sun Aug 23 12:35:19 2026] [::1]:34798 Accepted
+[Sun Aug 23 12:35:19 2026] [::1]:34798 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:19 2026] [::1]:34798 Closing
+[Sun Aug 23 12:35:19 2026] [::1]:34800 Accepted
+[Sun Aug 23 12:35:19 2026] [::1]:34800 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:19 2026] [::1]:34800 Closing
+[Sun Aug 23 12:35:20 2026] [::1]:34804 Accepted
+[Sun Aug 23 12:35:20 2026] [::1]:34804 [302]: GET /user/templates.php
+[Sun Aug 23 12:35:20 2026] [::1]:34804 Closing
+[Sun Aug 23 12:35:20 2026] [::1]:34816 Accepted
+[Sun Aug 23 12:35:20 2026] [::1]:34816 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:20 2026] [::1]:34816 Closing
+[Sun Aug 23 12:35:20 2026] [::1]:34828 Accepted
+[Sun Aug 23 12:35:20 2026] [::1]:34834 Accepted
+[Sun Aug 23 12:35:20 2026] [::1]:34828 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:20 2026] [::1]:34834 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:20 2026] [::1]:34828 Closing
+[Sun Aug 23 12:35:20 2026] [::1]:34834 Closing
+[Sun Aug 23 12:35:21 2026] [::1]:34850 Accepted
+[Sun Aug 23 12:35:21 2026] [::1]:34850 [200]: GET /public/site.php?website_id=1
+[Sun Aug 23 12:35:21 2026] [::1]:34850 Closing
+[Sun Aug 23 12:35:21 2026] [::1]:34866 Accepted
+[Sun Aug 23 12:35:21 2026] [::1]:34866 [200]: GET /templates/theme_elegance/assets/css/style.css
+[Sun Aug 23 12:35:21 2026] [::1]:34866 Closing
+[Sun Aug 23 12:35:24 2026] [::1]:34870 Accepted
+[Sun Aug 23 12:35:24 2026] [::1]:34870 [200]: GET /public/site.php?website_id=2
+[Sun Aug 23 12:35:24 2026] [::1]:34870 Closing
+[Sun Aug 23 12:35:24 2026] [::1]:34886 Accepted
+[Sun Aug 23 12:35:24 2026] [::1]:34886 [200]: GET /templates/theme_glamour/assets/css/style.css
+[Sun Aug 23 12:35:24 2026] [::1]:34886 Closing
+[Sun Aug 23 12:35:26 2026] [::1]:34902 Accepted
+[Sun Aug 23 12:35:26 2026] [::1]:34902 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:26 2026] [::1]:34902 Closing
+[Sun Aug 23 12:35:26 2026] [::1]:34904 Accepted
+[Sun Aug 23 12:35:26 2026] [::1]:34908 Accepted
+[Sun Aug 23 12:35:26 2026] [::1]:34904 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:26 2026] [::1]:34904 Closing
+[Sun Aug 23 12:35:26 2026] [::1]:34908 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:26 2026] [::1]:34908 Closing
+[Sun Aug 23 12:35:27 2026] [::1]:34916 Accepted
+[Sun Aug 23 12:35:27 2026] [::1]:34916 [302]: POST /auth/login.php
+[Sun Aug 23 12:35:27 2026] [::1]:34916 Closing
+[Sun Aug 23 12:35:27 2026] [::1]:34926 Accepted
+[Sun Aug 23 12:35:27 2026] [::1]:34926 [200]: GET /admin/dashboard.php
+[Sun Aug 23 12:35:27 2026] [::1]:34926 Closing
+[Sun Aug 23 12:35:27 2026] [::1]:34932 Accepted
+[Sun Aug 23 12:35:27 2026] [::1]:34942 Accepted
+[Sun Aug 23 12:35:27 2026] [::1]:34932 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:27 2026] [::1]:34942 [200]: GET /assets/js/admin.js
+[Sun Aug 23 12:35:27 2026] [::1]:34932 Closing
+[Sun Aug 23 12:35:27 2026] [::1]:34942 Closing
+[Sun Aug 23 12:35:28 2026] [::1]:51548 Accepted
+[Sun Aug 23 12:35:28 2026] [::1]:51548 [200]: GET /admin/template_preview.php?id=1
+[Sun Aug 23 12:35:28 2026] [::1]:51548 Closing
+[Sun Aug 23 12:35:28 2026] [::1]:51558 Accepted
+[Sun Aug 23 12:35:28 2026] [::1]:51558 [200]: GET /templates/theme_elegance/assets/css/style.css
+[Sun Aug 23 12:35:28 2026] [::1]:51558 Closing
+[Sun Aug 23 12:35:30 2026] [::1]:51572 Accepted
+[Sun Aug 23 12:35:30 2026] [::1]:51572 [200]: GET /admin/template_preview.php?id=2
+[Sun Aug 23 12:35:30 2026] [::1]:51572 Closing
+[Sun Aug 23 12:35:32 2026] [::1]:51588 Accepted
+[Sun Aug 23 12:35:32 2026] [::1]:51588 [302]: GET /auth/logout.php
+[Sun Aug 23 12:35:32 2026] [::1]:51588 Closing
+[Sun Aug 23 12:35:32 2026] [::1]:51596 Accepted
+[Sun Aug 23 12:35:32 2026] [::1]:51596 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:32 2026] [::1]:51596 Closing
+[Sun Aug 23 12:35:32 2026] [::1]:51608 Accepted
+[Sun Aug 23 12:35:32 2026] [::1]:51614 Accepted
+[Sun Aug 23 12:35:32 2026] [::1]:51608 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:32 2026] [::1]:51614 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:32 2026] [::1]:51608 Closing
+[Sun Aug 23 12:35:32 2026] [::1]:51614 Closing
+[Sun Aug 23 12:35:33 2026] [::1]:51622 Accepted
+[Sun Aug 23 12:35:33 2026] [::1]:51622 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:33 2026] [::1]:51622 Closing
+[Sun Aug 23 12:35:33 2026] [::1]:51632 Accepted
+[Sun Aug 23 12:35:33 2026] [::1]:51636 Accepted
+[Sun Aug 23 12:35:33 2026] [::1]:51632 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:33 2026] [::1]:51636 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:33 2026] [::1]:51632 Closing
+[Sun Aug 23 12:35:33 2026] [::1]:51636 Closing
+[Sun Aug 23 12:35:34 2026] [::1]:51642 Accepted
+[Sun Aug 23 12:35:34 2026] [::1]:51642 [200]: POST /auth/login.php
+[Sun Aug 23 12:35:34 2026] [::1]:51642 Closing
+[Sun Aug 23 12:35:34 2026] [::1]:51648 Accepted
+[Sun Aug 23 12:35:34 2026] [::1]:51656 Accepted
+[Sun Aug 23 12:35:34 2026] [::1]:51648 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:34 2026] [::1]:51656 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:34 2026] [::1]:51648 Closing
+[Sun Aug 23 12:35:34 2026] [::1]:51656 Closing
+[Sun Aug 23 12:35:35 2026] [::1]:51660 Accepted
+[Sun Aug 23 12:35:35 2026] [::1]:51660 [302]: GET /user/templates.php
+[Sun Aug 23 12:35:35 2026] [::1]:51660 Closing
+[Sun Aug 23 12:35:35 2026] [::1]:51666 Accepted
+[Sun Aug 23 12:35:35 2026] [::1]:51666 [200]: GET /auth/login.php
+[Sun Aug 23 12:35:35 2026] [::1]:51666 Closing
+[Sun Aug 23 12:35:35 2026] [::1]:51672 Accepted
+[Sun Aug 23 12:35:35 2026] [::1]:51678 Accepted
+[Sun Aug 23 12:35:35 2026] [::1]:51672 [200]: GET /assets/css/style.css
+[Sun Aug 23 12:35:35 2026] [::1]:51678 [200]: GET /assets/js/auth.js
+[Sun Aug 23 12:35:35 2026] [::1]:51672 Closing
+[Sun Aug 23 12:35:35 2026] [::1]:51678 Closing
+[Sun Aug 23 12:35:37 2026] [::1]:51688 Accepted
+[Sun Aug 23 12:35:37 2026] [::1]:51688 [200]: GET /public/site.php?website_id=1
+[Sun Aug 23 12:35:37 2026] [::1]:51688 Closing
+[Sun Aug 23 12:35:37 2026] [::1]:51696 Accepted
+[Sun Aug 23 12:35:37 2026] [::1]:51696 [200]: GET /templates/theme_elegance/assets/css/style.css
+[Sun Aug 23 12:35:37 2026] [::1]:51696 Closing
+[Sun Aug 23 12:35:42 2026] [::1]:46368 Accepted
+[Sun Aug 23 12:35:42 2026] [::1]:46368 [200]: GET /public/site.php?website_id=2
+[Sun Aug 23 12:35:42 2026] [::1]:46368 Closing
+[Sun Aug 23 12:35:42 2026] [::1]:46374 Accepted
+[Sun Aug 23 12:35:42 2026] [::1]:46374 [200]: GET /templates/theme_glamour/assets/css/style.css
+[Sun Aug 23 12:35:42 2026] [::1]:46374 Closing

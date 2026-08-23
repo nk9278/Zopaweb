@@ -1,0 +1,14 @@
+{
+    "name": "Elegant Bridal",
+    "slug": "elegant-bridal",
+    "version": "1.0.0",
+    "category": "makeup-artist",
+    "description": "A sophisticated, clean template designed for high-end bridal makeup artists.",
+    "author": "ZopaWeb",
+    "supports": {
+        "hero": true,
+        "services": true,
+        "gallery": true,
+        "reviews": true
+    }
+}

@@ -94,30 +94,37 @@ if ($template_id) {
 <div class="row g-3 mb-4">
     <?php
     $actions = [
-        ['icon' => 'bi-pencil-square', 'label' => 'Edit Website', 'color' => 'primary'],
-        ['icon' => 'bi-eye', 'label' => 'Preview', 'color' => 'info'],
-        ['icon' => 'bi-palette', 'label' => 'Templates', 'color' => 'success'],
-        ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning'],
-        ['icon' => 'bi-envelope', 'label' => 'Enquiries', 'color' => 'danger'],
-        ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary'],
-        ['icon' => 'bi-credit-card', 'label' => 'Subscription', 'color' => 'dark'],
-        ['icon' => 'bi-gear', 'label' => 'Settings', 'color' => 'secondary'],
+        ['icon' => 'bi-pencil-square', 'label' => 'Edit Website', 'color' => 'primary', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-eye', 'label' => 'Preview', 'color' => 'info', 'link' => $website ? '/public/site.php?website_id=' . $website['id'] : '#', 'disabled' => !$website, 'target' => '_blank'],
+        ['icon' => 'bi-palette', 'label' => 'Templates', 'color' => 'success', 'link' => '/user/templates.php', 'disabled' => false],
+        ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-envelope', 'label' => 'Enquiries', 'color' => 'danger', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-credit-card', 'label' => 'Subscription', 'color' => 'dark', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-gear', 'label' => 'Settings', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
     ];
     ?>
 
     <?php foreach ($actions as $action): ?>
         <div class="col-6 col-md-3">
-            <button class="card border-0 shadow-sm w-100 h-100 text-center p-4 btn btn-light" disabled style="opacity: 0.7;">
-                <i class="bi <?= $action['icon'] ?> fs-2 text-<?= $action['color'] ?> mb-2"></i>
-                <span class="fw-bold d-block"><?= $action['label'] ?></span>
-            </button>
+            <?php if ($action['disabled']): ?>
+                <button class="card border-0 shadow-sm w-100 h-100 text-center p-4 btn btn-light" disabled style="opacity: 0.7;">
+                    <i class="bi <?= $action['icon'] ?> fs-2 text-<?= $action['color'] ?> mb-2"></i>
+                    <span class="fw-bold d-block"><?= $action['label'] ?></span>
+                </button>
+            <?php else: ?>
+                <a href="<?= $action['link'] ?>" <?= isset($action['target']) ? 'target="'.$action['target'].'"' : '' ?> class="card border-0 shadow-sm w-100 h-100 text-center p-4 btn btn-light text-decoration-none" style="transition: transform 0.2s; cursor: pointer;">
+                    <i class="bi <?= $action['icon'] ?> fs-2 text-<?= $action['color'] ?> mb-2"></i>
+                    <span class="fw-bold d-block text-dark"><?= $action['label'] ?></span>
+                </a>
+            <?php endif; ?>
         </div>
     <?php endforeach; ?>
 </div>
 
 <div class="alert alert-info text-center border-0 shadow-sm">
     <i class="bi bi-info-circle me-2"></i>
-    Advanced website building features and actions will be available in Phase 2.
+    Advanced website building features and actions will be available in future phases.
 </div>
 
 <?php require_once __DIR__ . '/../includes/user_footer.php'; ?>
