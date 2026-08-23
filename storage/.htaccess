@@ -1,0 +1,8 @@
+# Prevent direct execution of uploaded scripts in the storage directory
+php_flag engine off
+RemoveHandler .php .phtml .php3
+RemoveType .php .phtml .php3
+
+<FilesMatch "\.(?i:php|php3|php4|php5|phtml|inc|js|html|htm|shtml|cgi)$">
+    Require all denied
+</FilesMatch>

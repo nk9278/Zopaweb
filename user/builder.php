@@ -104,9 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $settings[substr($k, 2)] = escape($v); // basic string
             } elseif (strpos($k, 'c_') === 0) {
                 $clean_key = substr($k, 2);
+                // Strip tags first
                 $clean_val = strip_tags($v, '<b><i><u><strong><em><a><h1><h2><h3><h4><h5><h6><p><br><ul><ol><li>');
 
-                // URL validation
+                // Remove dangerous attributes (on*, javascript:, data:)
+                $clean_val = preg_replace('/on[a-z]+=["\'].*?["\']/i', '', $clean_val);
+                $clean_val = preg_replace('/href=["\']javascript:.*?["\']/i', 'href="#"', $clean_val);
+                $clean_val = preg_replace('/href=["\']data:.*?["\']/i', 'href="#"', $clean_val);
+
+                // URL validation for direct URL fields
                 if (strpos($clean_key, 'url') !== false) {
                     $clean_val = trim($clean_val);
                     if (!empty($clean_val)) {
@@ -140,6 +146,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch sections
+// Fetch available media for the builder
+$media_stmt = $pdo->prepare("SELECT id, original_name, thumbnail_path, webp_path FROM media WHERE website_id = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 50");
+$media_stmt->execute([$website_id]);
+$available_media = $media_stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $stmt = $pdo->prepare("SELECT * FROM page_sections WHERE page_id = ? AND deleted_at IS NULL ORDER BY sort_order ASC, id ASC");
 $stmt->execute([$page_id]);
 $sections = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -292,7 +303,10 @@ $sections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Image URL</label>
-                        <input type="text" name="c_image" class="form-control" value="<?= escape($c['image'] ?? '') ?>">
+                        <div class="input-group">
+                            <input type="text" name="c_image" id="c_image_<?= $sec['id'] ?>" class="form-control" value="<?= escape($c['image'] ?? '') ?>">
+                            <button type="button" class="btn btn-outline-secondary" onclick="openMediaSelector('c_image_<?= $sec['id'] ?>')">Browse Library</button>
+                        </div>
                     </div>
 
                 <?php elseif ($sec['section_type'] === 'cta'): ?>
@@ -463,6 +477,52 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+
+<!-- Media Selector Modal -->
+<div class="modal fade" id="mediaSelectorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Select Media</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light" style="max-height: 60vh; overflow-y: auto;">
+                <?php if (empty($available_media)): ?>
+                    <div class="alert alert-info">No media available. <a href="/user/media.php" target="_blank">Upload files here.</a></div>
+                <?php else: ?>
+                    <div class="row g-3">
+                        <?php foreach($available_media as $m): ?>
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" onclick="selectMedia('<?= escape($m['webp_path']) ?>')">
+                                <img src="<?= escape($m['thumbnail_path'] ?: $m['webp_path']) ?>" class="card-img-top" style="height: 100px; object-fit: cover;" title="<?= escape($m['original_name']) ?>">
+                                <div class="card-body p-2 text-center text-truncate small">
+                                    <?= escape($m['original_name']) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let activeMediaInputId = null;
+
+function openMediaSelector(inputId) {
+    activeMediaInputId = inputId;
+    new bootstrap.Modal(document.getElementById('mediaSelectorModal')).show();
+}
+
+function selectMedia(url) {
+    if (activeMediaInputId) {
+        document.getElementById(activeMediaInputId).value = url;
+    }
+    bootstrap.Modal.getInstance(document.getElementById('mediaSelectorModal')).hide();
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/user_footer.php'; ?>

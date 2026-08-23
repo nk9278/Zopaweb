@@ -59,11 +59,30 @@ function get_website_data($pdo, $website_id) {
         ['name' => 'Editorial Shoot', 'price' => '₹10,000', 'description' => 'Creative makeup for fashion and photography.']
     ];
 
-    $gallery = [
-        'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800'
-    ];
+    // Fetch Gallery from DB
+    $gal_stmt = $pdo->prepare("
+        SELECT m.webp_path, m.alt_text, m.caption
+        FROM galleries g
+        JOIN media m ON g.media_id = m.id
+        WHERE g.website_id = ? AND g.status = 'visible' AND g.deleted_at IS NULL AND m.deleted_at IS NULL
+        ORDER BY g.sort_order ASC, g.id DESC
+    ");
+    $gal_stmt->execute([$website_id]);
+    $gallery_records = $gal_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $gallery = [];
+    if (!empty($gallery_records)) {
+        foreach ($gallery_records as $g) {
+            $gallery[] = $g['webp_path']; // The templates currently expect an array of string URLs
+        }
+    } else {
+        // Fallback to demo images if empty for preview purposes
+        $gallery = [
+            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800'
+        ];
+    }
 
     $reviews = [
         ['client' => 'Priya S.', 'rating' => 5, 'text' => 'Absolutely loved my bridal look! Highly recommended.'],
