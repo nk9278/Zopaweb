@@ -338,6 +338,28 @@ $sections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="text" name="c_heading" class="form-control" value="<?= escape($c['heading'] ?? '') ?>">
                     </div>
 
+                <?php elseif ($sec['section_type'] === 'lead_form'): ?>
+                    <div class="mb-3">
+                        <label class="form-label">Form Type</label>
+                        <select name="c_form_type" class="form-select">
+                            <option value="enquiry" <?= ($c['form_type']??'')==='enquiry'?'selected':'' ?>>General Enquiry</option>
+                            <option value="appointment" <?= ($c['form_type']??'')==='appointment'?'selected':'' ?>>Book Appointment</option>
+                            <option value="quote" <?= ($c['form_type']??'')==='quote'?'selected':'' ?>>Free Quote</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Heading</label>
+                        <input type="text" name="c_heading" class="form-control" value="<?= escape($c['heading'] ?? '') ?>" placeholder="e.g. Book an Appointment">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description Text</label>
+                        <textarea name="c_text" class="form-control" rows="2"><?= escape($c['text'] ?? '') ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Submit Button Label</label>
+                        <input type="text" name="c_btn_text" class="form-control" value="<?= escape($c['btn_text'] ?? '') ?>" placeholder="e.g. Submit Request">
+                    </div>
+
                 <?php else: ?>
                     <div class="mb-3">
                         <label class="form-label">Heading</label>

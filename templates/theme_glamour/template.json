@@ -30,7 +30,8 @@
             "gallery": true,
             "reviews": true,
             "cta": true,
-            "contact": true
+            "contact": true,
+            "lead_form": true
         }
     },
     "theme_defaults": {

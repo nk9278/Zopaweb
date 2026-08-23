@@ -100,7 +100,7 @@ if ($template_id) {
         ['icon' => 'bi-file-earmark-text', 'label' => 'Pages', 'color' => 'success', 'link' => '/user/pages.php', 'disabled' => !$website],
         ['icon' => 'bi-images', 'label' => 'Media Library', 'color' => 'warning', 'link' => '/user/media.php', 'disabled' => !$website],
         ['icon' => 'bi-columns-gap', 'label' => 'Gallery', 'color' => 'warning', 'link' => '/user/gallery.php', 'disabled' => !$website],
-        ['icon' => 'bi-envelope', 'label' => 'Enquiries', 'color' => 'danger', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-envelope', 'label' => 'Leads', 'color' => 'danger', 'link' => '/user/leads.php', 'disabled' => !$website],
         ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
         ['icon' => 'bi-credit-card', 'label' => 'Subscription', 'color' => 'dark', 'link' => '#', 'disabled' => true],
         ['icon' => 'bi-gear', 'label' => 'Settings', 'color' => 'secondary', 'link' => '#', 'disabled' => true],

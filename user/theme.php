@@ -438,6 +438,29 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <!-- Lead Generation / Conversion -->
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#conversionCollapse">
+                            <strong>Lead Conversion</strong>
+                        </button>
+                    </h2>
+                    <div id="conversionCollapse" class="accordion-collapse collapse" data-bs-parent="#themeAccordion">
+                        <div class="accordion-body px-3">
+                            <div class="form-check form-switch mb-3">
+                                <?php
+                                    $opts = json_decode($current_theme['options_json'] ?? '{}', true) ?: [];
+                                    $wa_checked = !empty($opts['floating_wa']) ? 'checked' : '';
+                                ?>
+                                <input class="form-check-input" type="checkbox" name="floating_wa" id="floatingWaToggle" value="1" <?= $wa_checked ?>>
+                                <label class="form-check-label small fw-bold" for="floatingWaToggle">Enable Floating WhatsApp Button</label>
+                                <div class="form-text small">Shows a sticky WhatsApp button in the bottom corner of your public website.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 </div>
                 <?php else: ?>
                 <div class="alert alert-warning m-3">
