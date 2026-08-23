@@ -1,0 +1,5 @@
+[Sun Aug 23 16:40:17 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Sun Aug 23 16:40:50 2026] [::1]:33062 Accepted
+[Sun Aug 23 16:40:50 2026] SQLSTATE[HY000] [2002] No such file or directory
+[Sun Aug 23 16:40:50 2026] [::1]:33062 [200]: GET /auth/login.php
+[Sun Aug 23 16:40:50 2026] [::1]:33062 Closing

@@ -240,6 +240,24 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
                         </h2>
                         <div id="colorsCollapse" class="accordion-collapse collapse show" data-bs-parent="#themeAccordion">
                             <div class="accordion-body px-0">
+                                <div class="px-3 mb-4">
+                                    <label class="form-label small text-muted fw-bold">Color Presets</label>
+                                    <select id="presetSelect" class="form-select form-select-sm mb-2">
+                                        <option value="">Select a Preset...</option>
+                                        <option value="rose_bridal">Rose Bridal</option>
+                                        <option value="luxury_black">Luxury Black</option>
+                                        <option value="soft_nude">Soft Nude</option>
+                                        <option value="ivory_elegance">Ivory Elegance</option>
+                                        <option value="dusty_pink">Dusty Pink</option>
+                                        <option value="wine_glam">Wine Glam</option>
+                                        <option value="lavender_beauty">Lavender Beauty</option>
+                                        <option value="peach_glow">Peach Glow</option>
+                                        <option value="ocean_blue">Ocean Blue</option>
+                                        <option value="minimal_neutral">Minimal Neutral</option>
+                                    </select>
+                                    <button type="button" id="applyPresetBtn" class="btn btn-outline-secondary btn-sm w-100">Preview Preset</button>
+                                </div>
+                                <hr>
                                 <?php
                                 $color_fields = [
                                     'primary_color' => 'Primary Color',
@@ -349,6 +367,17 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
                                     </select>
                                 </div>
                                 <div class="mb-3">
+                                    <label class="form-label small text-muted fw-bold">Card Style</label>
+                                    <select name="card_style" class="form-select style-select" data-var="--card-style" data-type="card_style">
+                                        <?php
+                                        $curr = get_theme_value('card_style', $current_theme, $defaults, 'styles');
+                                        foreach ($allowed_cards as $style):
+                                        ?>
+                                        <option value="<?= $style ?>" <?= $curr === $style ? 'selected' : '' ?>><?= $style ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label small text-muted fw-bold">Shadow Style</label>
                                     <select name="shadow_style" class="form-select style-select" data-var="--shadow-style" data-type="shadow_style">
                                         <?php
@@ -359,6 +388,52 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Layout Section -->
+                <?php if (!empty($capabilities['hero_variants']) || !empty($capabilities['navigation_variants'])): ?>
+                    <div class="accordion-item border-0">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#layoutCollapse">
+                                <strong>Layout Variants</strong>
+                            </button>
+                        </h2>
+                        <div id="layoutCollapse" class="accordion-collapse collapse" data-bs-parent="#themeAccordion">
+                            <div class="accordion-body px-3">
+                                <?php if (!empty($capabilities['hero_variants'])): ?>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted fw-bold">Hero Layout</label>
+                                    <select name="hero_variant" class="form-select style-select" data-var="--hero-variant" data-type="hero_variant">
+                                        <?php
+                                        $curr = get_theme_value('hero_variant', $current_theme, $defaults, 'layouts');
+                                        // Only show supported ones
+                                        foreach ($capabilities['hero_variants'] as $variant):
+                                            // Map capability string to UI string
+                                            $variant_label = ucwords(str_replace('_', ' ', $variant));
+                                        ?>
+                                        <option value="<?= $variant ?>" <?= $curr === $variant ? 'selected' : '' ?>><?= $variant_label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (!empty($capabilities['navigation_variants'])): ?>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted fw-bold">Navigation Layout</label>
+                                    <select name="navigation_variant" class="form-select style-select" data-var="--navigation-variant" data-type="navigation_variant">
+                                        <?php
+                                        $curr = get_theme_value('navigation_variant', $current_theme, $defaults, 'layouts');
+                                        foreach ($capabilities['navigation_variants'] as $variant):
+                                            $variant_label = ucwords(str_replace('_', ' ', $variant));
+                                        ?>
+                                        <option value="<?= $variant ?>" <?= $curr === $variant ? 'selected' : '' ?>><?= $variant_label ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -396,7 +471,42 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
 </div>
 
 <script>
+        const colorPresets = {
+        'rose_bridal': { primary_color: '#D88AA0', background_color: '#FFFFFF', surface_color: '#FFF0F5', text_color: '#333333', heading_color: '#2B1B1B', button_color: '#D88AA0', button_text_color: '#FFFFFF' },
+        'luxury_black': { primary_color: '#D4AF37', background_color: '#111111', surface_color: '#1A1A1A', text_color: '#E0E0E0', heading_color: '#FFFFFF', button_color: '#D4AF37', button_text_color: '#111111' },
+        'soft_nude': { primary_color: '#C6A485', background_color: '#FDFBF7', surface_color: '#F4EFEA', text_color: '#4A4036', heading_color: '#2C241B', button_color: '#C6A485', button_text_color: '#FFFFFF' },
+        'ivory_elegance': { primary_color: '#EADDCD', background_color: '#FFFFF0', surface_color: '#FDFCF0', text_color: '#555555', heading_color: '#222222', button_color: '#EADDCD', button_text_color: '#333333' },
+        'dusty_pink': { primary_color: '#B57382', background_color: '#FAFAFA', surface_color: '#F2EBEC', text_color: '#403D39', heading_color: '#252422', button_color: '#B57382', button_text_color: '#FFFFFF' },
+        'wine_glam': { primary_color: '#722F37', background_color: '#1C1C1C', surface_color: '#262626', text_color: '#EBEBEB', heading_color: '#FFFFFF', button_color: '#722F37', button_text_color: '#FFFFFF' },
+        'lavender_beauty': { primary_color: '#B594B6', background_color: '#FCFAFC', surface_color: '#F4F0F4', text_color: '#4A4A4A', heading_color: '#2E2E2E', button_color: '#B594B6', button_text_color: '#FFFFFF' },
+        'peach_glow': { primary_color: '#FFB89E', background_color: '#FFFDF9', surface_color: '#FFF6F0', text_color: '#5C4D4A', heading_color: '#382B29', button_color: '#FFB89E', button_text_color: '#FFFFFF' },
+        'ocean_blue': { primary_color: '#4A7C93', background_color: '#F5F9FA', surface_color: '#EBF2F5', text_color: '#334E58', heading_color: '#1A2F38', button_color: '#4A7C93', button_text_color: '#FFFFFF' },
+        'minimal_neutral': { primary_color: '#9E9E9E', background_color: '#FFFFFF', surface_color: '#F5F5F5', text_color: '#424242', heading_color: '#212121', button_color: '#9E9E9E', button_text_color: '#FFFFFF' }
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
+        const applyPresetBtn = document.getElementById('applyPresetBtn');
+        const presetSelect = document.getElementById('presetSelect');
+
+        if (applyPresetBtn) {
+            applyPresetBtn.addEventListener('click', function() {
+                const presetId = presetSelect.value;
+                if (!presetId || !colorPresets[presetId]) return;
+
+                const preset = colorPresets[presetId];
+                for (const [key, value] of Object.entries(preset)) {
+                    const hexInput = document.querySelector(`input.color-hex-input[name="${key}"]`);
+                    if (hexInput) {
+                        hexInput.value = value;
+                        const picker = hexInput.previousElementSibling;
+                        if (picker) {
+                            picker.value = value;
+                            updateIframeVar(picker.dataset.var, value);
+                        }
+                    }
+                }
+            });
+        }
         const iframe = document.getElementById('previewIframe');
 
         // Sync color picker and text input
@@ -451,6 +561,26 @@ function get_theme_value($key, $current_theme, $defaults, $section = 'colors') {
                 'Soft': '4px',
                 'Rounded': '8px',
                 'Pill': '9999px'
+            },
+            'card_style': {
+                'Flat': 'none',
+                'Soft': '0 2px 8px rgba(0,0,0,0.04)',
+                'Elevated': '0 10px 20px rgba(0,0,0,0.08)',
+                'Bordered': 'none', /* Handle border color separately in CSS if needed */
+                'Luxury': '0 20px 40px rgba(0,0,0,0.1)'
+            },
+            'hero_variant': {
+                'centered': 'centered',
+                'image_left': 'image-left',
+                'image_right': 'image-right',
+                'overlay': 'overlay',
+                'full_width': 'full-width'
+            },
+            'navigation_variant': {
+                'minimal': 'minimal',
+                'logo_left': 'logo-left',
+                'logo_center': 'logo-center',
+                'sticky': 'sticky'
             },
             'shadow_style': {
                 'None': 'none',

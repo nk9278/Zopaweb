@@ -14,7 +14,15 @@
             "colors": true,
             "typography": true,
             "buttons": true,
-            "cards": true
+            "cards": true,
+            "hero_variants": [
+                "centered",
+                "overlay"
+            ],
+            "navigation_variants": [
+                "minimal",
+                "sticky"
+            ]
         }
     },
     "theme_defaults": {
@@ -40,6 +48,10 @@
             "border_radius": "Sharp",
             "shadow_style": "Subtle",
             "card_style": "Bordered"
+        },
+        "layouts": {
+            "hero_variant": "overlay",
+            "navigation_variant": "minimal"
         }
     }
 }
