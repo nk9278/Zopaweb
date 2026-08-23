@@ -10,7 +10,19 @@ $css_url = template_asset_url($engine['folder'], 'css/style.css');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= escape($business['name'] ?? 'Makeup Artist') ?> | <?= escape($business['tagline'] ?? '') ?></title>
+    <title><?= escape($seo['title'] ?? ($business['name'] ?? 'Makeup Artist')) ?></title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="<?= escape($seo['description'] ?? '') ?>">
+    <link rel="canonical" href="<?= escape($seo['canonical'] ?? '') ?>">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="<?= escape($seo['title'] ?? '') ?>">
+    <meta property="og:description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta property="og:image" content="<?= escape($seo['image'] ?? '') ?>">
+    <meta property="og:url" content="<?= escape($seo['canonical'] ?? '') ?>">
+    <meta property="og:type" content="website">
+
     <!-- Template isolated CSS -->
     <link rel="stylesheet" href="<?= escape($css_url) ?>">
     <!-- Google Fonts for Elegance -->

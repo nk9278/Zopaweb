@@ -209,6 +209,15 @@ function render_page($template, $data, $page = 'home') {
     $safe_folder = basename($template['folder_key']);
     $safe_page = basename($page);
 
+    // Check if the requested page is supported by the template manifest
+    $validation = validate_template_manifest($safe_folder);
+    $supported_pages = $validation['manifest']['pages'] ?? ['home', 'about', 'services', 'gallery', 'contact'];
+
+    if (!in_array($safe_page, $supported_pages)) {
+        render_404();
+        return;
+    }
+
     $template_file = __DIR__ . "/../templates/{$safe_folder}/template.php";
     $page_file = __DIR__ . "/../templates/{$safe_folder}/pages/{$safe_page}.php";
 
@@ -230,8 +239,9 @@ function render_page($template, $data, $page = 'home') {
 }
 
 /**
- * Renders a safe fallback state when templates fail or are missing.
+ * Status Renderers
  */
+
 function render_fallback($reason = "Website configuration error.") {
     $fallback_file = __DIR__ . '/../templates/fallback/template.php';
     if (file_exists($fallback_file)) {
@@ -240,6 +250,40 @@ function render_fallback($reason = "Website configuration error.") {
         http_response_code(503);
         echo "<!DOCTYPE html><html><head><title>Service Unavailable</title></head><body style='text-align:center; font-family:sans-serif; padding-top: 100px;'>";
         echo "<h1>Service Unavailable</h1><p>The website is currently undergoing maintenance.</p>";
+        echo "</body></html>";
+    }
+}
+
+function render_unpublished() {
+    http_response_code(403);
+    echo "<!DOCTYPE html><html><head><title>Not Published</title><style>body{font-family:sans-serif;text-align:center;padding:100px;background:#f8f9fa;color:#333;}</style></head><body>";
+    echo "<h1>Coming Soon</h1><p>This website is not published yet.</p>";
+    echo "</body></html>";
+}
+
+function render_maintenance() {
+    http_response_code(503);
+    echo "<!DOCTYPE html><html><head><title>Maintenance</title><style>body{font-family:sans-serif;text-align:center;padding:100px;background:#f8f9fa;color:#333;}</style></head><body>";
+    echo "<h1>Maintenance</h1><p>This website is temporarily unavailable. Please check back later.</p>";
+    echo "</body></html>";
+}
+
+function render_suspended() {
+    http_response_code(403);
+    echo "<!DOCTYPE html><html><head><title>Website Unavailable</title><style>body{font-family:sans-serif;text-align:center;padding:100px;background:#f8f9fa;color:#333;}</style></head><body>";
+    echo "<h1>Website Unavailable</h1><p>Website temporarily unavailable.</p>";
+    echo "</body></html>";
+}
+
+function render_404() {
+    // Attempt to load ZopaWeb's branded 404 page if it exists in public
+    $branded_404 = __DIR__ . '/../public/404.php';
+    if (file_exists($branded_404)) {
+        include $branded_404;
+    } else {
+        http_response_code(404);
+        echo "<!DOCTYPE html><html><head><title>Page Not Found</title><style>body{font-family:sans-serif;text-align:center;padding:100px;background:#f8f9fa;color:#333;}</style></head><body>";
+        echo "<h1>404 Not Found</h1><p>The page you requested does not exist.</p>";
         echo "</body></html>";
     }
 }

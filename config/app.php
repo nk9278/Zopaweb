@@ -5,6 +5,16 @@
 define('APP_ENV', 'development');
 define('APP_URL', 'http://localhost:8000'); // Adjust as needed
 
+// Platform Domain Configuration (Phase 5)
+// Defines the core domain used to resolve subdomains. e.g. "zopaweb.com" or "localhost:8000" for dev.
+define('PRIMARY_PLATFORM_DOMAIN', 'localhost:8000');
+
+// Reserved Subdomains
+// These subdomains are reserved for system use and cannot be used as client website slugs.
+define('RESERVED_SUBDOMAINS', [
+    'www', 'admin', 'api', 'app', 'mail', 'smtp', 'ftp', 'cdn', 'static', 'assets', 'support', 'help', 'status', 'auth', 'public'
+]);
+
 // Session Configuration
 define('SESSION_LIFETIME', 86400); // 1 day in seconds
 define('SESSION_NAME', 'ZopaWebSession');
