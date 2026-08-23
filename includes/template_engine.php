@@ -99,6 +99,11 @@ function get_website_data($pdo, $website_id) {
     $nav_stmt->execute([$website_id]);
     $navigation = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Fetch SEO Config
+    $seo_stmt = $pdo->prepare("SELECT s.*, m.webp_path as og_image_url FROM website_seo s LEFT JOIN media m ON s.og_image_id = m.id WHERE s.website_id = ?");
+    $seo_stmt->execute([$website_id]);
+    $website_seo = $seo_stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
     return [
         'site' => $website,
         'template' => $template,
@@ -108,7 +113,8 @@ function get_website_data($pdo, $website_id) {
         'gallery' => $gallery,
         'reviews' => $reviews,
         'social' => $social,
-        'navigation' => $navigation
+        'navigation' => $navigation,
+        'website_seo' => $website_seo
     ];
 }
 
@@ -316,6 +322,94 @@ function render_page($template, $data, $page_slug = 'home') {
         include $legacy_file;
         $rendered_sections = ob_get_clean();
     }
+
+    // --- Phase 11 SEO & Metadata Generation ---
+    $seo_config = $data['website_seo'] ?? [];
+
+    // Base URL structure securely derived from database slug
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+    $website_slug = $data['site']['website_slug'] ?? 'demo';
+    $base_url = "https://web.{$website_slug}.zopaweb.com";
+
+    // Determine Page Image
+    $page_image_url = null;
+    if (!empty($page_record['seo_image_id'])) {
+        $img_stmt = $pdo->prepare("SELECT webp_path FROM media WHERE id = ?");
+        $img_stmt->execute([$page_record['seo_image_id']]);
+        $page_image_url = $img_stmt->fetchColumn();
+    }
+
+    // Fallback logic
+    $title = !empty($page_record['seo_title']) ? $page_record['seo_title'] : (!empty($page_record['title']) ? $page_record['title'] . ' | ' . ($data['business']['name']??'') : (!empty($seo_config['seo_title']) ? $seo_config['seo_title'] : ($data['business']['name'] ?? 'Makeup Artist')));
+    $desc = !empty($page_record['seo_description']) ? $page_record['seo_description'] : (!empty($seo_config['seo_description']) ? $seo_config['seo_description'] : ($data['business']['tagline'] ?? ''));
+    $image = $page_image_url ?: (!empty($seo_config['og_image_url']) ? $seo_config['og_image_url'] : (!empty($data['business']['hero_image']) ? $data['business']['hero_image'] : ''));
+
+    $canonical = rtrim($base_url, '/') . '/' . ($page_slug === 'home' ? '' : ltrim($page_slug, '/'));
+
+    // Robots Logic
+    $r_index = 'index';
+    $r_follow = 'follow';
+
+    if ($page_record && $page_record['status'] !== 'published') {
+        // Specifically drafted database pages
+        $r_index = 'noindex';
+        $r_follow = 'nofollow';
+    } else {
+        // Fallbacks for published database pages OR legacy static files
+        if (isset($page_record['robots_index']) && $page_record['robots_index'] === 0) $r_index = 'noindex';
+        elseif (isset($seo_config['robots_index']) && $seo_config['robots_index'] === 0) $r_index = 'noindex';
+
+        if (isset($page_record['robots_follow']) && $page_record['robots_follow'] === 0) $r_follow = 'nofollow';
+        elseif (isset($seo_config['robots_follow']) && $seo_config['robots_follow'] === 0) $r_follow = 'nofollow';
+    }
+
+    // Map Address if available
+    $address = [];
+    if (!empty($data['business']['street'])) $address['streetAddress'] = $data['business']['street'];
+    if (!empty($data['business']['city'])) $address['addressLocality'] = $data['business']['city'];
+    if (!empty($data['business']['state'])) $address['addressRegion'] = $data['business']['state'];
+    if (!empty($data['business']['postal_code'])) $address['postalCode'] = $data['business']['postal_code'];
+    if (!empty($data['business']['country'])) $address['addressCountry'] = $data['business']['country'];
+
+    // Map Social URLs (SameAs)
+    $sameAs = [];
+    if (!empty($data['social']['instagram'])) $sameAs[] = $data['social']['instagram'];
+    if (!empty($data['social']['facebook'])) $sameAs[] = $data['social']['facebook'];
+    if (!empty($data['social']['youtube'])) $sameAs[] = $data['social']['youtube'];
+    if (!empty($data['social']['pinterest'])) $sameAs[] = $data['social']['pinterest'];
+    $sameAs = array_filter($sameAs);
+
+    // Schema.org Structured Data
+    $schema = [
+        "@context" => "https://schema.org",
+        "@type" => !empty($seo_config['business_type']) ? $seo_config['business_type'] : "LocalBusiness",
+        "name" => $data['business']['name'] ?? '',
+        "url" => $base_url,
+        "telephone" => $data['business']['phone'] ?? '',
+        "address" => !empty($address) ? array_merge(['@type' => 'PostalAddress'], $address) : null,
+        "sameAs" => !empty($sameAs) ? array_values($sameAs) : null
+    ];
+    if ($image) $schema["image"] = (strpos($image, 'http') === 0 ? '' : $base_url) . $image;
+
+    $schema_json = json_encode(array_filter($schema), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+
+    $og_title = (!empty($page_record['og_title'])) ? $page_record['og_title'] : $title;
+    $og_desc = (!empty($page_record['og_description'])) ? $page_record['og_description'] : $desc;
+    $canonical = (!empty($page_record['canonical_url'])) ? $page_record['canonical_url'] : $canonical;
+
+    $seo = [
+        'title' => $title,
+        'og_title' => $og_title,
+        'description' => $desc,
+        'og_description' => $og_desc,
+        'image' => $image,
+        'canonical' => $canonical,
+        'robots' => "{$r_index}, {$r_follow}",
+        'twitter_card' => $seo_config['twitter_card'] ?? 'summary_large_image',
+        'type' => $page_slug === 'home' ? 'website' : 'article',
+        'schema_json' => $schema_json
+    ];
+    // --- End SEO ---
 
     // Engine provides scoped variables for template.php to use.
     $engine = [

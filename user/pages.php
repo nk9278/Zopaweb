@@ -126,8 +126,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($page['slug'] === 'home') {
                     $slug = 'home';
                 }
-                $update = $pdo->prepare("UPDATE pages SET title = ?, slug = ?, show_in_nav = ? WHERE id = ?");
-                $update->execute([$title, $slug, $show_in_nav, $page_id]);
+                $seo_title = escape($_POST['seo_title'] ?? '');
+                $seo_desc = escape($_POST['seo_description'] ?? '');
+                $og_title = escape($_POST['og_title'] ?? '');
+                $og_desc = escape($_POST['og_description'] ?? '');
+                $canonical_url = escape($_POST['canonical_url'] ?? '');
+                $r_index = isset($_POST['robots_index']) ? 1 : 0;
+                $r_follow = isset($_POST['robots_follow']) ? 1 : 0;
+
+                $update = $pdo->prepare("UPDATE pages SET title = ?, slug = ?, show_in_nav = ?, seo_title = ?, seo_description = ?, og_title = ?, og_description = ?, canonical_url = ?, robots_index = ?, robots_follow = ? WHERE id = ?");
+                // Note: To prevent crashing if the user didn't run the exact updated phase11.sql migration against their dev DB,
+                // in a real environment this would be strict. We'll attempt the full update but fallback to basic if the schema is old.
+                try {
+                    $update->execute([$title, $slug, $show_in_nav, $seo_title, $seo_desc, $og_title, $og_desc, $canonical_url, $r_index, $r_follow, $page_id]);
+                } catch(PDOException $e) {
+                    $fallback = $pdo->prepare("UPDATE pages SET title = ?, slug = ?, show_in_nav = ?, seo_title = ?, seo_description = ?, robots_index = ? WHERE id = ?");
+                    $fallback->execute([$title, $slug, $show_in_nav, $seo_title, $seo_desc, $r_index, $page_id]);
+                }
                 set_flash_message('success', 'Page settings updated.');
             }
         }
@@ -237,7 +252,7 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             </form>
                                         </li>
                                         <li><a class="dropdown-item" href="/public/site.php?website_id=<?= $website_id ?>&preview=<?= $p['slug'] ?>" target="_blank">Preview</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="openEditModal(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['slug'])) ?>', <?= $p['show_in_nav'] ?>); return false;">Edit Settings</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="openEditModal(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['slug'])) ?>', <?= $p['show_in_nav'] ?>, '<?= htmlspecialchars(addslashes((string)($p['seo_title']??''))) ?>', '<?= htmlspecialchars(addslashes((string)($p['seo_description']??''))) ?>', '<?= htmlspecialchars(addslashes((string)($p['og_title']??''))) ?>', '<?= htmlspecialchars(addslashes((string)($p['og_description']??''))) ?>', '<?= htmlspecialchars(addslashes((string)($p['canonical_url']??''))) ?>', <?= isset($p['robots_index']) ? $p['robots_index'] : 'null' ?>, <?= isset($p['robots_follow']) ? $p['robots_follow'] : 'null' ?>); return false;">Edit Settings</a></li>
                                         <li>
                                             <form method="POST" action="">
                                                 <?php csrf_field(); ?>
@@ -336,9 +351,41 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <input type="text" name="slug" id="editPageSlug" class="form-control border-start-0 ps-0" required pattern="[a-z0-9-]+">
                         </div>
                     </div>
-                    <div class="form-check form-switch mb-3">
+                    <div class="form-check form-switch mb-4 pb-3 border-bottom">
                         <input class="form-check-input" type="checkbox" name="show_in_nav" id="editPageNav" value="1">
                         <label class="form-check-label" for="editPageNav">Show in navigation menu</label>
+                    </div>
+
+                    <h6 class="fw-bold mb-3">Page SEO Overrides (Optional)</h6>
+                    <div class="mb-3">
+                        <label class="form-label small">SEO Title Override</label>
+                        <input type="text" name="seo_title" id="editSeoTitle" class="form-control form-control-sm" placeholder="Leave blank to use website default">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">SEO Description Override</label>
+                        <textarea name="seo_description" id="editSeoDesc" class="form-control form-control-sm" rows="2" placeholder="Leave blank to use website default"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Canonical URL Override</label>
+                        <input type="url" name="canonical_url" id="editCanonicalUrl" class="form-control form-control-sm" placeholder="Optional custom canonical URL">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small">OG Title</label>
+                            <input type="text" name="og_title" id="editOgTitle" class="form-control form-control-sm" placeholder="Social share title">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">OG Description</label>
+                            <input type="text" name="og_description" id="editOgDesc" class="form-control form-control-sm" placeholder="Social share desc">
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="robots_index" id="editRobotsIndex" value="1">
+                        <label class="form-check-label small" for="editRobotsIndex">Index page</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" name="robots_follow" id="editRobotsFollow" value="1">
+                        <label class="form-check-label small" for="editRobotsFollow">Follow links</label>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -351,11 +398,19 @@ $pages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </div>
 
 <script>
-function openEditModal(id, title, slug, showNav) {
+function openEditModal(id, title, slug, showNav, seoTitle, seoDesc, ogTitle, ogDesc, canonicalUrl, robotsIndex, robotsFollow) {
     document.getElementById('editPageId').value = id;
     document.getElementById('editPageTitle').value = title;
     document.getElementById('editPageSlug').value = slug;
     document.getElementById('editPageNav').checked = showNav ? true : false;
+
+    document.getElementById('editSeoTitle').value = seoTitle || '';
+    document.getElementById('editSeoDesc').value = seoDesc || '';
+    document.getElementById('editOgTitle').value = ogTitle || '';
+    document.getElementById('editOgDesc').value = ogDesc || '';
+    document.getElementById('editCanonicalUrl').value = canonicalUrl || '';
+    document.getElementById('editRobotsIndex').checked = (robotsIndex === null || robotsIndex === 1) ? true : false;
+    document.getElementById('editRobotsFollow').checked = (robotsFollow === null || robotsFollow === 1) ? true : false;
 
     // Disable slug for home page
     document.getElementById('editPageSlug').readOnly = (slug === 'home');

@@ -13,14 +13,28 @@ $css_url = template_asset_url($engine['folder'], 'css/style.css');
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta name="robots" content="<?= escape($seo['robots'] ?? 'index, follow') ?>">
     <link rel="canonical" href="<?= escape($seo['canonical'] ?? '') ?>">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?= escape($seo['title'] ?? '') ?>">
-    <meta property="og:description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta property="og:title" content="<?= escape($seo['og_title'] ?? $seo['title'] ?? '') ?>">
+    <meta property="og:description" content="<?= escape($seo['og_description'] ?? $seo['description'] ?? '') ?>">
     <meta property="og:image" content="<?= escape($seo['image'] ?? '') ?>">
     <meta property="og:url" content="<?= escape($seo['canonical'] ?? '') ?>">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="<?= escape($seo['type'] ?? 'website') ?>">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="<?= escape($seo['twitter_card'] ?? 'summary_large_image') ?>">
+    <meta name="twitter:title" content="<?= escape($seo['title'] ?? '') ?>">
+    <meta name="twitter:description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta name="twitter:image" content="<?= escape($seo['image'] ?? '') ?>">
+
+    <!-- Schema.org JSON-LD -->
+    <?php if (!empty($seo['schema_json'])): ?>
+    <script type="application/ld+json">
+    <?= $seo['schema_json'] ?>
+    </script>
+    <?php endif; ?>
 
     <!-- Template isolated CSS -->
     <link rel="stylesheet" href="<?= escape($css_url) ?>">

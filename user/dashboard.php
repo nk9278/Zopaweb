@@ -103,6 +103,7 @@ if ($template_id) {
         ['icon' => 'bi-envelope', 'label' => 'Leads', 'color' => 'danger', 'link' => '/user/leads.php', 'disabled' => !$website],
         ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
         ['icon' => 'bi-credit-card', 'label' => 'Subscription', 'color' => 'dark', 'link' => '#', 'disabled' => true],
+        ['icon' => 'bi-search', 'label' => 'SEO Settings', 'color' => 'success', 'link' => '/user/seo.php', 'disabled' => !$website],
         ['icon' => 'bi-gear', 'label' => 'Settings', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
     ];
     ?>
