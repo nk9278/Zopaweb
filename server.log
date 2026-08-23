@@ -1,0 +1,4 @@
+[Sun Aug 23 09:17:01 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Sun Aug 23 09:17:03 2026] [::1]:49004 Accepted
+[Sun Aug 23 09:17:03 2026] [::1]:49004 [200]: HEAD /auth/login.php
+[Sun Aug 23 09:17:03 2026] [::1]:49004 Closing
