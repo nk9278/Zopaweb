@@ -40,7 +40,7 @@ $css_url = template_asset_url($engine['folder'], 'css/style.css');
     <?php render_layout($engine['folder'], 'header', $engine['data']); ?>
 
     <main>
-        <?php include $engine['page_file']; ?>
+        <?= $engine['page_content'] ?? '' ?>
     </main>
 
     <?php render_layout($engine['folder'], 'footer', $engine['data']); ?>

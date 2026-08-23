@@ -97,6 +97,7 @@ if ($template_id) {
         ['icon' => 'bi-palette2', 'label' => 'Appearance', 'color' => 'primary', 'link' => '/user/theme.php', 'disabled' => !$website],
         ['icon' => 'bi-eye', 'label' => 'Preview', 'color' => 'info', 'link' => $website ? '/public/site.php?website_id=' . $website['id'] : '#', 'disabled' => !$website, 'target' => '_blank'],
         ['icon' => 'bi-palette', 'label' => 'Templates', 'color' => 'success', 'link' => '/user/templates.php', 'disabled' => false],
+        ['icon' => 'bi-file-earmark-text', 'label' => 'Pages', 'color' => 'success', 'link' => '/user/pages.php', 'disabled' => !$website],
         ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning', 'link' => '#', 'disabled' => true],
         ['icon' => 'bi-envelope', 'label' => 'Enquiries', 'color' => 'danger', 'link' => '#', 'disabled' => true],
         ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary', 'link' => '#', 'disabled' => true],

@@ -23,6 +23,15 @@
                 "minimal",
                 "sticky"
             ]
+        },
+        "sections": {
+            "hero": true,
+            "about": true,
+            "services": true,
+            "gallery": true,
+            "reviews": true,
+            "cta": true,
+            "contact": true
         }
     },
     "theme_defaults": {

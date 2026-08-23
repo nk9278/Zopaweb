@@ -75,6 +75,11 @@ function get_website_data($pdo, $website_id) {
         'facebook' => '#'
     ];
 
+    // Fetch Navigation Pages
+    $nav_stmt = $pdo->prepare("SELECT title, slug FROM pages WHERE website_id = ? AND status = 'published' AND show_in_nav = 1 AND deleted_at IS NULL ORDER BY sort_order ASC");
+    $nav_stmt->execute([$website_id]);
+    $navigation = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+
     return [
         'site' => $website,
         'template' => $template,
@@ -83,7 +88,8 @@ function get_website_data($pdo, $website_id) {
         'services' => $services,
         'gallery' => $gallery,
         'reviews' => $reviews,
-        'social' => $social
+        'social' => $social,
+        'navigation' => $navigation
     ];
 }
 
@@ -199,56 +205,109 @@ function render_layout($folder_key, $layout_name, $data = []) {
 }
 
 /**
- * Safely render a full template page.
+ * Safely render a full template page dynamically.
  * @param array $template Database record of the template
  * @param array $data The isolated website data
- * @param string $page The specific page to render (default 'home')
+ * @param string $page_slug The specific page to render (default 'home')
  * @return void
  */
-function render_page($template, $data, $page = 'home') {
+function render_page($template, $data, $page_slug = 'home') {
+    global $pdo;
+
     if (!$template || empty($template['folder_key'])) {
-        // Fallback safety
         render_fallback();
         return;
     }
 
     $safe_folder = basename($template['folder_key']);
-    $safe_page = basename($page);
+    $website_id = $data['site']['id'];
 
-    // Check if the requested page is supported by the template manifest
-    $validation = validate_template_manifest($safe_folder);
-    $supported_pages = $validation['manifest']['pages'] ?? ['home', 'about', 'services', 'gallery', 'contact'];
+    // Verify Page Exists and is Published
+    $page_stmt = $pdo->prepare("SELECT * FROM pages WHERE website_id = ? AND slug = ? AND deleted_at IS NULL LIMIT 1");
+    $page_stmt->execute([$website_id, $page_slug]);
+    $page_record = $page_stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!in_array($safe_page, $supported_pages)) {
-        render_404();
-        return;
+    // Draft Preview Logic: If a session exists and user owns the site, they can view drafts.
+    // Otherwise, 404 for drafts/unpublished/archived.
+    $is_owner = (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $data['site']['user_id']);
+
+    $legacy_file = __DIR__ . "/../templates/{$safe_folder}/pages/" . basename($page_slug) . ".php";
+
+    if (!$page_record) {
+        // Always fallback to legacy pages if no DB record is found to prevent breaking existing sites
+        if (!file_exists($legacy_file)) {
+            render_404(); return;
+        }
+    } else {
+        if ($page_record['status'] !== 'published' && !$is_owner) {
+            render_404();
+            return;
+        }
     }
 
     $template_file = __DIR__ . "/../templates/{$safe_folder}/template.php";
-    $page_file = __DIR__ . "/../templates/{$safe_folder}/pages/{$safe_page}.php";
-
-    if (!file_exists($template_file) || !file_exists($page_file)) {
-        render_fallback("Template files missing.");
+    if (!file_exists($template_file)) {
+        render_fallback("Template file missing.");
         return;
     }
 
-    // Load manifest to get defaults
+    // Load manifest to get capabilities and defaults
     $manifest = json_decode(file_get_contents(__DIR__ . "/../templates/{$safe_folder}/template.json"), true) ?: [];
     $theme_defaults = $manifest['theme_defaults'] ?? [];
+    $supported_sections = $manifest['supports']['sections'] ?? [];
 
     $theme_settings = $data['theme_settings'] ?? [];
     $theme_css = generate_theme_css($theme_settings, $theme_defaults);
     $google_fonts_url = generate_google_fonts_url($theme_settings, $theme_defaults);
 
+    // Fetch and render sections
+    $rendered_sections = '';
+
+    if ($page_record) {
+        $sec_stmt = $pdo->prepare("SELECT * FROM page_sections WHERE page_id = ? AND status = 'visible' AND deleted_at IS NULL ORDER BY sort_order ASC");
+        $sec_stmt->execute([$page_record['id']]);
+        $sections = $sec_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        ob_start();
+        foreach ($sections as $section) {
+            $type = $section['section_type'];
+            // Check if template supports it
+            if (!empty($supported_sections[$type])) {
+                $component_path = __DIR__ . "/../templates/{$safe_folder}/components/{$type}.php";
+                if (file_exists($component_path)) {
+                    $section_settings = json_decode($section['settings_json'], true) ?: [];
+                    $section_content = json_decode($section['content_json'], true) ?: [];
+
+                    // Remap variables for backward compatibility with phase 6 sections
+                    // e.g. some templates expect $services instead of pulling from $data['services']
+                    // and $business instead of $data['business']
+
+                    extract($data); // Re-extract so components get fresh $business, $services, etc.
+                    include $component_path;
+                }
+            } else {
+                echo "<!-- Section type '{$type}' is not supported by the current template. -->\n";
+            }
+        }
+        $rendered_sections = ob_get_clean();
+    } else {
+        // Legacy fallback rendering
+        ob_start();
+        extract($data);
+        include $legacy_file;
+        $rendered_sections = ob_get_clean();
+    }
+
     // Engine provides scoped variables for template.php to use.
     $engine = [
         'folder' => $safe_folder,
-        'page_file' => $page_file,
+        'page_content' => $rendered_sections,
         'data' => $data,
         'theme_css' => $theme_css,
         'google_fonts_url' => $google_fonts_url,
         'theme_settings' => $theme_settings,
-        'theme_defaults' => $theme_defaults
+        'theme_defaults' => $theme_defaults,
+        'page_record' => $page_record // Passes page metadata
     ];
 
     // Delegate rendering control to the template's master file.
