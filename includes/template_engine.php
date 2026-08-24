@@ -34,6 +34,7 @@ function get_website_data($pdo, $website_id) {
 
         // Helper to resolve media URL
         // Helper to resolve media URL safely across mixed strings
+    global $resolveMediaUrl;
     $resolveMediaUrl = function($media_reference) use ($pdo) {
         if (!$media_reference) return null;
 

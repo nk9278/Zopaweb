@@ -352,4 +352,8 @@ ALTER TABLE `theme_settings`
 ALTER TABLE `media`
   ADD CONSTRAINT `media_ibfk_1` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE;
 
+ALTER TABLE `website_seo`
+  ADD CONSTRAINT `website_seo_ibfk_1` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `website_seo_og_media_fk` FOREIGN KEY (`default_og_image_id`) REFERENCES `media` (`id`) ON DELETE SET NULL;
+
 COMMIT;

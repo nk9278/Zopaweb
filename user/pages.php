@@ -31,6 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add' || $action === 'edit') {
         $title = trim($_POST['title'] ?? '');
         $slug = trim($_POST['slug'] ?? '');
+        $meta_title = trim($_POST['meta_title'] ?? '');
+        $meta_description = trim($_POST['meta_description'] ?? '');
         $status = in_array($_POST['status'] ?? '', ['draft', 'published', 'archived']) ? $_POST['status'] : 'draft';
         $sort_order = (int)($_POST['sort_order'] ?? 0);
         $show_in_navigation = isset($_POST['show_in_navigation']) ? 1 : 0;
@@ -57,13 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($action === 'add') {
-                $insert = $pdo->prepare("INSERT INTO pages (website_id, title, slug, status, sort_order, show_in_navigation, is_homepage) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $insert->execute([$website_id, $title, $slug, $status, $sort_order, $show_in_navigation, $is_homepage]);
+                $insert = $pdo->prepare("INSERT INTO pages (website_id, title, slug, status, sort_order, show_in_navigation, is_homepage, meta_title, meta_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $insert->execute([$website_id, $title, $slug, $status, $sort_order, $show_in_navigation, $is_homepage, $meta_title, $meta_description]);
                 set_flash_message('success', 'Page created.');
             } else {
                 $page_id = (int)$_POST['page_id'];
-                $update = $pdo->prepare("UPDATE pages SET title=?, slug=?, status=?, sort_order=?, show_in_navigation=?, is_homepage=? WHERE id=? AND website_id=?");
-                $update->execute([$title, $slug, $status, $sort_order, $show_in_navigation, $is_homepage, $page_id, $website_id]);
+                $update = $pdo->prepare("UPDATE pages SET title=?, slug=?, status=?, sort_order=?, show_in_navigation=?, is_homepage=?, meta_title=?, meta_description=? WHERE id=? AND website_id=?");
+                $update->execute([$title, $slug, $status, $sort_order, $show_in_navigation, $is_homepage, $meta_title, $meta_description, $page_id, $website_id]);
                 set_flash_message('success', 'Page updated.');
             }
         }
@@ -253,6 +255,16 @@ include __DIR__ . '/../includes/user_header.php';
                                                         <input class="form-check-input" type="checkbox" name="is_homepage" id="homeCheck<?= $p['id'] ?>" <?= $p['is_homepage'] ? 'checked' : '' ?>>
                                                         <label class="form-check-label" for="homeCheck<?= $p['id'] ?>">Set as Website Homepage</label>
                                                     </div>
+                                                                                                    <hr>
+                                                    <h6 class="fw-bold mb-3">Page SEO</h6>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-medium">SEO Title</label>
+                                                        <input type="text" name="meta_title" class="form-control" value="<?= escape($p['meta_title'] ?? '') ?>" placeholder="Optional override">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-medium">Meta Description</label>
+                                                        <textarea name="meta_description" class="form-control" rows="2" placeholder="Optional override"><?= escape($p['meta_description'] ?? '') ?></textarea>
+                                                    </div>
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -312,6 +324,16 @@ include __DIR__ . '/../includes/user_header.php';
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_homepage" id="homeCheckNew">
                         <label class="form-check-label" for="homeCheckNew">Set as Website Homepage</label>
+                    </div>
+                                    <hr>
+                    <h6 class="fw-bold mb-3">Page SEO</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">SEO Title</label>
+                        <input type="text" name="meta_title" class="form-control" placeholder="Optional override">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Meta Description</label>
+                        <textarea name="meta_description" class="form-control" rows="2" placeholder="Optional override"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
