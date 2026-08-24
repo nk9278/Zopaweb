@@ -190,23 +190,26 @@ CREATE TABLE `commissions` (
 
 -- --------------------------------------------------------
 
--- Table structure for table `enquiries`
-CREATE TABLE `enquiries` (
+-- Table structure for table `leads`
+CREATE TABLE `leads` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `website_id` int(11) NOT NULL,
-  `media_id` int(11) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `phone` varchar(50) DEFAULT NULL,
-  `whatsapp` varchar(50) DEFAULT NULL,
-  `service` varchar(255) DEFAULT NULL,
-  `event_date` date DEFAULT NULL,
-  `location` varchar(255) DEFAULT NULL,
+  `service_id` int(11) DEFAULT NULL,
+  `preferred_date` date DEFAULT NULL,
+  `preferred_time` varchar(50) DEFAULT NULL,
   `message` text DEFAULT NULL,
-  `status` enum('new','contacted','booked','closed','spam') NOT NULL DEFAULT 'new',
+  `source` varchar(50) DEFAULT 'direct',
+  `form_type` varchar(50) DEFAULT 'inquiry',
+  `status` enum('new','contacted','converted','closed','spam') NOT NULL DEFAULT 'new',
+  `ip_address` varchar(45) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `website_id` (`website_id`)
+  KEY `website_id` (`website_id`),
+  KEY `service_id` (`service_id`),
+  KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -312,8 +315,9 @@ ALTER TABLE `commissions`
   ADD CONSTRAINT `commissions_ibfk_1` FOREIGN KEY (`creator_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `commissions_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
-ALTER TABLE `enquiries`
-  ADD CONSTRAINT `enquiries_ibfk_1` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE;
+ALTER TABLE `leads`
+  ADD CONSTRAINT `leads_ibfk_1` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `leads_service_fk` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE SET NULL;
 
 ALTER TABLE `pages`
   ADD CONSTRAINT `pages_ibfk_1` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE;

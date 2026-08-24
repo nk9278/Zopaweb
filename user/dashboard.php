@@ -134,10 +134,10 @@ include __DIR__ . '/../includes/user_header.php';
                 <a href="<?= $website ? '/user/templates.php' : '#' ?>" class="list-group-item list-group-item-action py-3 <?= !$website ? 'disabled' : '' ?>">
                     <i class="bi bi-palette text-muted me-2"></i> Change Template
                 </a>
-                <a href="#" class="list-group-item list-group-item-action py-3 disabled">
+                <a href="/user/leads.php" class="list-group-item list-group-item-action py-3">
                     <i class="bi bi-envelope-paper text-muted me-2"></i> Lead Inbox
                 </a>
-                <a href="#" class="list-group-item list-group-item-action py-3 disabled">
+                <a href="/user/leads.php" class="list-group-item list-group-item-action py-3">
                     <i class="bi bi-graph-up text-muted me-2"></i> Analytics
                 </a>
             </div>

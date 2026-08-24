@@ -91,7 +91,7 @@ function get_website_data($pdo, $website_id) {
     }
 
     // 4. Fetch Services
-    $services_stmt = $pdo->prepare("SELECT name, description, price, media_id, image_url FROM services WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $services_stmt = $pdo->prepare("SELECT id, name, description, price, media_id, image_url FROM services WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
     $services_stmt->execute([$website_id]);
     $services_raw = $services_stmt->fetchAll(PDO::FETCH_ASSOC);
     $services = [];
