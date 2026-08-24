@@ -16,6 +16,8 @@ $event_type = $_POST["event_type"] ?? "";
 $page_path = $_POST["page_path"] ?? "";
 $section_type = $_POST["section_type"] ?? "";
 
+require_once __DIR__ . "/../../includes/security.php";
+
 // Basic validation
 if (!$website_id || empty($event_type) || !in_array($event_type, ["whatsapp_click", "call_click", "form_submit"])) {
     http_response_code(400);
@@ -23,6 +25,12 @@ if (!$website_id || empty($event_type) || !in_array($event_type, ["whatsapp_clic
 }
 
 $pdo = getDB();
+
+// Throttling analytical beacons to prevent DB spam (60 clicks per minute per IP)
+if (check_api_rate_limit($pdo, 'event_tracker', 60, '1 MINUTE')) {
+    http_response_code(429);
+    die();
+}
 
 // Quick insert (fire and forget)
 try {

@@ -10,6 +10,15 @@ require_once __DIR__ . '/../includes/template_engine.php';
 require_once __DIR__ . '/../includes/host_resolver.php';
 require_once __DIR__ . '/../config/database.php';
 
+send_security_headers();
+
+// Layer 3: Public Page Rate Limiting (100 requests per minute per IP to prevent rapid scraping)
+if (check_api_rate_limit($pdo, 'public_page', 100, '1 MINUTE')) {
+    http_response_code(429);
+    header("Retry-After: 60");
+    die("Rate limit exceeded.");
+}
+
 $pdo = getDB();
 $host = $_SERVER['HTTP_HOST'] ?? '';
 

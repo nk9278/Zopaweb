@@ -6,3 +6,6 @@ RemoveType .php .phtml .php3
 <FilesMatch "\.(?i:php|php3|php4|php5|phtml|inc|js|html|htm|shtml|cgi)$">
     Require all denied
 </FilesMatch>
+
+# Phase 13 Directory Listing Protection
+Options -Indexes

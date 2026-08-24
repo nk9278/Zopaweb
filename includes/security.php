@@ -104,3 +104,61 @@ function clear_login_attempts($pdo, $email) {
     $stmt = $pdo->prepare("DELETE FROM login_attempts WHERE ip_address = ? OR email = ?");
     $stmt->execute([$ip, $email]);
 }
+
+/**
+ * Output standardized security headers to protect against Clickjacking, MIME sniffing, and XSS
+ */
+function send_security_headers() {
+    if (!headers_sent()) {
+        // Prevent MIME type sniffing
+        header('X-Content-Type-Options: nosniff');
+
+        // Prevent framing (Clickjacking)
+        header('X-Frame-Options: SAMEORIGIN');
+
+        // Privacy conscious referrer
+        header('Referrer-Policy: strict-origin-when-cross-origin');
+
+        // Content Security Policy - Allows Google Fonts, inline styles for dynamic themes, and self images
+        // We cannot use default-src 'none' because it breaks template CDNs and Unsplash placeholders.
+        $csp = "default-src 'self'; " .
+               "img-src 'self' data: https:; " .
+               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " .
+               "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; " .
+               "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " .
+               "connect-src 'self'; " .
+               "frame-ancestors 'self';";
+
+        header("Content-Security-Policy: " . $csp);
+    }
+}
+/**
+ * Global API Request Throttler
+ * @param PDO $pdo
+ * @param string $endpoint The context of the rate limit (e.g., 'lead_form', 'media_upload', 'login')
+ * @param int $max_requests Maximum allowed requests
+ * @param string $interval MySQL Interval String (e.g., '15 MINUTE', '1 HOUR')
+ * @return bool True if rate limit is exceeded, False if safe.
+ */
+function check_api_rate_limit($pdo, $endpoint, $max_requests, $interval) {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    // Clean old logs sporadically (1% chance to keep table lightweight)
+    if (rand(1, 100) === 1) {
+        $pdo->query("DELETE FROM rate_limits WHERE created_at < DATE_SUB(NOW(), INTERVAL 1 DAY)");
+    }
+
+    // Insert current request
+    $stmt = $pdo->prepare("INSERT INTO rate_limits (ip_address, endpoint) VALUES (?, ?)");
+    $stmt->execute([$ip, $endpoint]);
+
+    // Check total requests in window
+    $check = $pdo->prepare("SELECT COUNT(*) FROM rate_limits WHERE ip_address = ? AND endpoint = ? AND created_at >= DATE_SUB(NOW(), INTERVAL {$interval})");
+    $check->execute([$ip, $endpoint]);
+    $count = (int)$check->fetchColumn();
+
+    if ($count > $max_requests) {
+        return true; // Exceeded
+    }
+    return false; // Safe
+}

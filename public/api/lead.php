@@ -22,15 +22,14 @@ if (!verify_csrf_token($_POST["csrf_token"] ?? "")) {
 
 $pdo = getDB();
 
-// Basic rate limiting by IP (max 5 leads per IP per hour)
-$ip = $_SERVER["REMOTE_ADDR"] ?? "0.0.0.0";
-$rate_stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR) AND notes LIKE ?");
-$rate_stmt->execute(["%IP: $ip%"]);
-if ($rate_stmt->fetchColumn() >= 5) {
+// Layer 5: Request throttling via strict Global Rate Limits
+if (check_api_rate_limit($pdo, 'lead_form', 5, '1 HOUR')) {
     http_response_code(429);
-    echo json_encode(["success" => false, "error" => "Too many submissions. Please try again later."]);
+    header("Retry-After: 3600");
+    echo json_encode(["success" => false, "error" => "Rate limit exceeded. Please try again later."]);
     die();
 }
+$ip = $_SERVER["REMOTE_ADDR"] ?? "0.0.0.0";
 
 $website_id = (int)($_POST["website_id"] ?? 0);
 if (!$website_id) {

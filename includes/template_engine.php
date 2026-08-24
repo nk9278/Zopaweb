@@ -488,6 +488,30 @@ function render_page($template, $data, $page_slug = 'home') {
         </script>
     ';
 
+    // Phase 13 Lightweight Anti-Scraping / Right-Click Protection
+    // Adds a script to prevent casual image dragging and right-clicking on the public template preview areas,
+    // while keeping form inputs accessible.
+    $engine['page_content'] .= '
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("contextmenu", function(e) {
+                // Allow right click on form elements
+                if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") {
+                    return true;
+                }
+                e.preventDefault();
+                return false;
+            });
+            document.addEventListener("dragstart", function(e) {
+                if (e.target.tagName === "IMG") {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+        </script>
+    ';
+
     // Delegate rendering control to the template's master file.
     extract($data); // Expose $site, $business, etc.
     include $template_file;
