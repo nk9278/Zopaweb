@@ -36,7 +36,15 @@ function get_website_data($pdo, $website_id) {
     $template_stmt->execute([$website['template_id']]);
     $template = $template_stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Placeholder data structures for Phase 4 rendering.
+    // --- MOCK DATA MAPPING (FOUNDATION RECOVERY R1) ---
+    // The following arrays represent mock data injected into templates.
+    // In future phases, these must be replaced with dynamic database queries:
+    // $business -> `websites` and a future `business_profiles` table.
+    // $services -> future `services` table.
+    // $gallery -> future `media` table.
+    // $reviews -> future `reviews` table.
+    // $social -> future `social_links` table.
+    // -------------------------------------------------
     // In future phases (5+), these will query actual DB tables (services, packages, gallery, reviews, faqs).
     $business = [
         'name' => $website['website_name'],
