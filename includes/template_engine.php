@@ -1,23 +1,19 @@
 <?php
 // includes/template_engine.php
 
-/**
- * ZopaWeb Template Engine Foundation
- * Separates data logic from presentation.
- */
-
-require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/security.php';
 
 /**
- * Fetch completely isolated data for a single website.
- * Prevents cross-client data leakage.
+ * Fetches completely isolated data for a specific website, fetching only related DB records.
+ *
  * @param PDO $pdo
  * @param int $website_id
- * @return array
+ * @return array|null
  */
 function get_website_data($pdo, $website_id) {
-    // 1. Fetch Core Website & User Profile Data
+    if (!$website_id) return null;
+
+    // 1. Fetch Core Website Data & Owner
     $stmt = $pdo->prepare("
         SELECT w.*, u.name as owner_name, u.email as owner_email, u.phone as owner_phone
         FROM websites w
@@ -36,47 +32,72 @@ function get_website_data($pdo, $website_id) {
     $template_stmt->execute([$website['template_id']]);
     $template = $template_stmt->fetch(PDO::FETCH_ASSOC);
 
-    // --- MOCK DATA MAPPING (FOUNDATION RECOVERY R1) ---
-    // The following arrays represent mock data injected into templates.
-    // In future phases, these must be replaced with dynamic database queries:
-    // $business -> `websites` and a future `business_profiles` table.
-    // $services -> future `services` table.
-    // $gallery -> future `media` table.
-    // $reviews -> future `reviews` table.
-    // $social -> future `social_links` table.
-    // -------------------------------------------------
-    // In future phases (5+), these will query actual DB tables (services, packages, gallery, reviews, faqs).
-    $business = [
-        'name' => $website['website_name'],
-        'email' => $website['owner_email'],
-        'phone' => $website['owner_phone'],
-        'address' => 'Sample Address (Phase 5)',
-        'tagline' => 'Professional Makeup Artistry',
-        'about' => 'Welcome to my professional makeup portfolio. I specialize in bridal, editorial, and special event makeup, ensuring you look your absolute best for any occasion.',
-        'hero_image' => 'https://images.unsplash.com/photo-1512496015851-a1dc8a473105?auto=format&fit=crop&q=80&w=1600'
-    ];
+    // 3. Fetch Business Profile
+    $profile_stmt = $pdo->prepare("SELECT * FROM business_profiles WHERE website_id = ?");
+    $profile_stmt->execute([$website_id]);
+    $business_profile = $profile_stmt->fetch(PDO::FETCH_ASSOC);
 
-    $services = [
-        ['name' => 'Bridal Makeup', 'price' => '₹15,000', 'description' => 'Complete bridal package including trial and day-of styling.'],
-        ['name' => 'Party Makeup', 'price' => '₹5,000', 'description' => 'Flawless makeup for parties and events.'],
-        ['name' => 'Editorial Shoot', 'price' => '₹10,000', 'description' => 'Creative makeup for fashion and photography.']
-    ];
+    if ($business_profile) {
+        $business = [
+            'name' => $business_profile['business_name'],
+            'tagline' => $business_profile['tagline'],
+            'email' => $business_profile['email'] ?? $website['owner_email'],
+            'phone' => $business_profile['phone'] ?? $website['owner_phone'],
+            'whatsapp' => $business_profile['whatsapp'],
+            'address' => $business_profile['address'],
+            'city' => $business_profile['city'],
+            'about' => $business_profile['about'],
+            'logo_url' => $business_profile['logo_url'],
+            'hero_image' => $business_profile['hero_image_url']
+        ];
+    } else {
+        // Safe fallback for empty state
+        $business = [
+            'name' => $website['website_name'],
+            'tagline' => null,
+            'email' => $website['owner_email'],
+            'phone' => $website['owner_phone'],
+            'whatsapp' => null,
+            'address' => null,
+            'city' => null,
+            'about' => null,
+            'logo_url' => null,
+            'hero_image' => null
+        ];
+    }
 
-    $gallery = [
-        'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800'
-    ];
+    // 4. Fetch Services
+    $services_stmt = $pdo->prepare("SELECT name, description, price, image_url FROM services WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $services_stmt->execute([$website_id]);
+    $services = $services_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $reviews = [
-        ['client' => 'Priya S.', 'rating' => 5, 'text' => 'Absolutely loved my bridal look! Highly recommended.'],
-        ['client' => 'Anita K.', 'rating' => 5, 'text' => 'Very professional and understood exactly what I wanted.']
-    ];
+    // 5. Fetch Gallery
+    $gallery_stmt = $pdo->prepare("SELECT image_url, caption, alt_text FROM gallery_items WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $gallery_stmt->execute([$website_id]);
+    $gallery_items = $gallery_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $gallery = [];
+    foreach ($gallery_items as $item) {
+        $gallery[] = $item['image_url']; // To match current template array structure, can adapt later
+    }
 
-    $social = [
-        'instagram' => '#',
-        'facebook' => '#'
-    ];
+    // 6. Fetch Reviews
+    $reviews_stmt = $pdo->prepare("SELECT reviewer_name as client, rating, review_text as text, image_url FROM reviews WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $reviews_stmt->execute([$website_id]);
+    $reviews = $reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 7. Fetch Social Links
+    $social_stmt = $pdo->prepare("SELECT platform, url FROM social_links WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $social_stmt->execute([$website_id]);
+    $social_items = $social_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $social = [];
+    foreach ($social_items as $s) {
+        $social[strtolower($s['platform'])] = $s['url'];
+    }
+
+    // 8. Fetch Theme Settings
+    $theme_stmt = $pdo->prepare("SELECT * FROM theme_settings WHERE website_id = ?");
+    $theme_stmt->execute([$website_id]);
+    $theme = $theme_stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
     return [
         'site' => $website,
@@ -85,7 +106,8 @@ function get_website_data($pdo, $website_id) {
         'services' => $services,
         'gallery' => $gallery,
         'reviews' => $reviews,
-        'social' => $social
+        'social' => $social,
+        'theme' => $theme
     ];
 }
 
