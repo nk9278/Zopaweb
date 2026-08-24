@@ -30,23 +30,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add' || $action === 'edit') {
-        $image_url = trim($_POST['image_url'] ?? ''); // R4 will replace with actual media picker
+        $media_id_post = !empty($_POST['media_id']) ? (int)$_POST['media_id'] : null;
         $caption = trim($_POST['caption'] ?? '');
         $alt_text = trim($_POST['alt_text'] ?? '');
         $sort_order = (int)($_POST['sort_order'] ?? 0);
         $status = in_array($_POST['status'] ?? '', ['active', 'inactive']) ? $_POST['status'] : 'active';
 
-        if (empty($image_url)) {
+        if (empty($media_id_post)) {
             set_flash_message('error', 'Image URL is required.');
         } else {
             if ($action === 'add') {
-                $insert = $pdo->prepare("INSERT INTO gallery_items (website_id, image_url, caption, alt_text, sort_order, status) VALUES (?, ?, ?, ?, ?, ?)");
-                $insert->execute([$website_id, $image_url, $caption, $alt_text, $sort_order, $status]);
+                $insert = $pdo->prepare("INSERT INTO gallery_items (website_id, media_id, caption, alt_text, sort_order, status) VALUES (?, ?, ?, ?, ?, ?)");
+                $insert->execute([$website_id, $media_id_post, $caption, $alt_text, $sort_order, $status]);
                 set_flash_message('success', 'Image added to gallery.');
             } else {
                 $item_id = (int)$_POST['item_id'];
-                $update = $pdo->prepare("UPDATE gallery_items SET image_url=?, caption=?, alt_text=?, sort_order=?, status=? WHERE id=? AND website_id=?");
-                $update->execute([$image_url, $caption, $alt_text, $sort_order, $status, $item_id, $website_id]);
+                $update = $pdo->prepare("UPDATE gallery_items SET media_id=?, caption=?, alt_text=?, sort_order=?, status=? WHERE id=? AND website_id=?");
+                $update->execute([$media_id_post, $caption, $alt_text, $sort_order, $status, $item_id, $website_id]);
                 set_flash_message('success', 'Gallery item updated.');
             }
         }
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch current gallery
-$stmt = $pdo->prepare("SELECT * FROM gallery_items WHERE website_id = ? ORDER BY sort_order ASC, id ASC");
+$stmt = $pdo->prepare("SELECT g.*, m.storage_path, m.file_extension, m.has_thumbnail, m.original_filename FROM gallery_items g LEFT JOIN media m ON g.media_id = m.id WHERE g.website_id = ? ORDER BY sort_order ASC, id ASC");
 $stmt->execute([$website_id]);
 $gallery = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -99,7 +99,7 @@ include __DIR__ . '/../includes/user_header.php';
         <?php foreach ($gallery as $item): ?>
             <div class="col-md-4 col-xl-3 mb-4">
                 <div class="card h-100 border-0 shadow-sm">
-                    <img src="<?= escape($item['image_url']) ?>" class="card-img-top" alt="<?= escape($item['alt_text']) ?>" style="height: 200px; object-fit: cover;">
+                    <img src="<?= $item['media_id'] ? '/public/api/media.php?id='.$item['media_id'].'&size=thumb' : escape($item['image_url']) ?>" class="card-img-top" alt="<?= escape($item['alt_text']) ?>" style="height: 200px; object-fit: cover;">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="badge <?= $item['status'] === 'active' ? 'bg-success' : 'bg-secondary' ?>"><?= escape(ucfirst($item['status'])) ?></span>
@@ -134,60 +134,21 @@ include __DIR__ . '/../includes/user_header.php';
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Image URL *</label>
-                                    <input type="url" name="image_url" class="form-control" required value="<?= escape($item['image_url']) ?>">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Caption</label>
-                                    <input type="text" name="caption" class="form-control" value="<?= escape($item['caption']) ?>">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-medium">Alt Text</label>
-                                    <input type="text" name="alt_text" class="form-control" value="<?= escape($item['alt_text']) ?>" placeholder="For SEO and accessibility">
-                                </div>
-                                <div class="row">
-                                    <div class="col-6 mb-3">
-                                        <label class="form-label fw-medium">Sort Order</label>
-                                        <input type="number" name="sort_order" class="form-control" value="<?= (int)$item['sort_order'] ?>">
-                                    </div>
-                                    <div class="col-6 mb-3">
-                                        <label class="form-label fw-medium">Status</label>
-                                        <select name="status" class="form-select">
-                                            <option value="active" <?= $item['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                                            <option value="inactive" <?= $item['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
-
-<!-- Add Modal -->
-<div class="modal fade" id="addGalleryModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST">
-                <?php csrf_field(); ?>
-                <input type="hidden" name="action" value="add">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Image</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-medium">Image URL *</label>
-                        <input type="url" name="image_url" class="form-control" required placeholder="https://...">
-                    </div>
+                                                <div class="mb-3">
+            <label class="form-label fw-medium">Select Media Image *</label>
+            <select name="media_id" class="form-select" required>
+                <option value="">-- Select Media --</option>
+                <?php
+                $media_stmt = $pdo->prepare("SELECT id, original_filename FROM media WHERE website_id = ? AND media_type = 'image' AND status = 'active' ORDER BY created_at DESC");
+                $media_stmt->execute([$website_id]);
+                while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $selected = ($item['media_id'] == $m['id']) ? 'selected' : '';
+                    echo '<option value="'.$m['id'].'" '.$selected.'>'.escape($m['original_filename']).'</option>';
+                }
+                ?>
+            </select>
+            <div class="form-text">Select an image uploaded to your <a href="/user/media.php" target="_blank">Media Library</a>.</div>
+        </div>
                     <div class="mb-3">
                         <label class="form-label fw-medium">Caption</label>
                         <input type="text" name="caption" class="form-control">

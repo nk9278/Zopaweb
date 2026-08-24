@@ -99,6 +99,7 @@ include __DIR__ . '/../includes/user_header.php';
                 ['icon' => 'bi-chat-quote', 'label' => 'Reviews', 'color' => 'danger', 'link' => '/user/reviews.php'],
                 ['icon' => 'bi-palette', 'label' => 'Theme', 'color' => 'secondary', 'link' => '/user/theme.php'],
                 ['icon' => 'bi-share', 'label' => 'Social Links', 'color' => 'primary', 'link' => '/user/social.php'],
+                ['icon' => 'bi-images', 'label' => 'Media Library', 'color' => 'dark', 'link' => '/user/media.php'],
                 ['icon' => 'bi-globe', 'label' => 'Domain', 'color' => 'dark', 'link' => '#', 'disabled' => true],
             ];
 

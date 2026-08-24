@@ -243,10 +243,22 @@ include __DIR__ . '/../includes/user_header.php';
                             </div>
                         <?php endif; ?>
 
-                        <?php if (in_array($sec['section_type'], ['hero', 'about'])): ?>
+                                                <?php if (in_array($sec['section_type'], ['hero', 'about'])): ?>
                             <div class="mb-3">
-                                <label class="form-label fw-medium">Image URL</label>
-                                <input type="url" name="image_url" class="form-control" value="<?= escape($content['image_url'] ?? '') ?>" placeholder="https://...">
+                                <label class="form-label fw-medium">Select Image</label>
+                                <select name="image_url" class="form-select">
+                                    <option value="">-- No Image --</option>
+                                    <?php
+                                    $media_stmt = $pdo->prepare("SELECT id, original_filename FROM media WHERE website_id = ? AND media_type = 'image' AND status = 'active' ORDER BY created_at DESC");
+                                    $media_stmt->execute([$website_id]);
+                                    while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                        // Store the ID as the value mapped to 'image_url' JSON key for backwards compatibility
+                                        $val = 'media:' . $m['id'];
+                                        $selected = (($content['image_url'] ?? '') === $val) ? 'selected' : '';
+                                        echo '<option value="'.$val.'" '.$selected.'>'.escape($m['original_filename']).'</option>';
+                                    }
+                                    ?>
+                                </select>
                             </div>
                         <?php endif; ?>
 

@@ -35,7 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $whatsapp = trim($_POST['whatsapp'] ?? '');
     $address = trim($_POST['address'] ?? '');
     $city = trim($_POST['city'] ?? '');
-    // Logo and Hero handled by R4 media later
+    $logo_media_id = !empty($_POST['logo_media_id']) ? (int)$_POST['logo_media_id'] : null;
+    $hero_media_id = !empty($_POST['hero_media_id']) ? (int)$_POST['hero_media_id'] : null;
 
     if (empty($business_name)) {
         set_flash_message('error', 'Business Name is required.');
@@ -46,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $existing = $stmt->fetch();
 
         if ($existing) {
-            $update = $pdo->prepare("UPDATE business_profiles SET business_name=?, tagline=?, about=?, email=?, phone=?, whatsapp=?, address=?, city=? WHERE website_id=?");
-            $update->execute([$business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $website_id]);
+            $update = $pdo->prepare("UPDATE business_profiles SET business_name=?, tagline=?, about=?, email=?, phone=?, whatsapp=?, address=?, city=?, logo_media_id=?, hero_media_id=? WHERE website_id=?");
+            $update->execute([$business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id, $website_id]);
         } else {
-            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $insert->execute([$website_id, $business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city]);
+            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city, logo_media_id, hero_media_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $insert->execute([$website_id, $business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id]);
         }
         set_flash_message('success', 'Business profile saved successfully.');
         redirect('/user/business.php');
@@ -112,6 +113,34 @@ include __DIR__ . '/../includes/user_header.php';
                 <div class="col-md-4">
                     <label class="form-label fw-medium">City</label>
                     <input type="text" name="city" class="form-control" value="<?= escape($profile['city'] ?? '') ?>">
+                </div>
+
+                                <div class="col-md-6">
+                    <label class="form-label fw-medium">Business Logo</label>
+                    <select name="logo_media_id" class="form-select">
+                        <option value="">-- No Logo --</option>
+                        <?php
+                        $media_stmt = $pdo->prepare("SELECT id, original_filename FROM media WHERE website_id = ? AND media_type = 'image' AND status = 'active' ORDER BY created_at DESC");
+                        $media_stmt->execute([$website_id]);
+                        while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                            $selected = (($profile['logo_media_id'] ?? null) == $m['id']) ? 'selected' : '';
+                            echo '<option value="'.$m['id'].'" '.$selected.'>'.escape($m['original_filename']).'</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Primary Hero Image</label>
+                    <select name="hero_media_id" class="form-select">
+                        <option value="">-- No Hero Image --</option>
+                        <?php
+                        $media_stmt->execute([$website_id]);
+                        while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                            $selected = (($profile['hero_media_id'] ?? null) == $m['id']) ? 'selected' : '';
+                            echo '<option value="'.$m['id'].'" '.$selected.'>'.escape($m['original_filename']).'</option>';
+                        }
+                        ?>
+                    </select>
                 </div>
 
                 <div class="col-12 mt-4">

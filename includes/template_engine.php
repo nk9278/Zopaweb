@@ -32,6 +32,30 @@ function get_website_data($pdo, $website_id) {
     $template_stmt->execute([$website['template_id']]);
     $template = $template_stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Helper to resolve media URL
+        // Helper to resolve media URL safely across mixed strings
+    $resolveMediaUrl = function($media_reference) use ($pdo) {
+        if (!$media_reference) return null;
+
+        // Handle explicit JSON string wrapper 'media:{ID}'
+        if (is_string($media_reference) && strpos($media_reference, 'media:') === 0) {
+            $media_id = (int)str_replace('media:', '', $media_reference);
+        } else {
+            // Raw integer ID
+            $media_id = (int)$media_reference;
+        }
+
+        if (!$media_id) return $media_reference; // Fallback to raw string if it was just an external url
+
+        $stmt = $pdo->prepare("SELECT id, storage_path, file_extension, has_webp, website_id, original_filename FROM media WHERE id = ?");
+        $stmt->execute([$media_id]);
+        $m = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($m) {
+            return "/public/api/media.php?id=" . $m['id'] . "&size=webp";
+        }
+        return $media_reference;
+    };
+
     // 3. Fetch Business Profile
     $profile_stmt = $pdo->prepare("SELECT * FROM business_profiles WHERE website_id = ?");
     $profile_stmt->execute([$website_id]);
@@ -47,8 +71,8 @@ function get_website_data($pdo, $website_id) {
             'address' => $business_profile['address'],
             'city' => $business_profile['city'],
             'about' => $business_profile['about'],
-            'logo_url' => $business_profile['logo_url'],
-            'hero_image' => $business_profile['hero_image_url']
+            'logo_url' => $resolveMediaUrl($business_profile['logo_media_id']),
+            'hero_image' => $resolveMediaUrl($business_profile['hero_media_id'])
         ];
     } else {
         // Safe fallback for empty state
@@ -67,23 +91,33 @@ function get_website_data($pdo, $website_id) {
     }
 
     // 4. Fetch Services
-    $services_stmt = $pdo->prepare("SELECT name, description, price, image_url FROM services WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $services_stmt = $pdo->prepare("SELECT name, description, price, media_id, image_url FROM services WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
     $services_stmt->execute([$website_id]);
-    $services = $services_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $services_raw = $services_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $services = [];
+    foreach($services_raw as $s) {
+        $s['image_url'] = $s['media_id'] ? $resolveMediaUrl($s['media_id']) : $s['image_url'];
+        $services[] = $s;
+    }
 
     // 5. Fetch Gallery
-    $gallery_stmt = $pdo->prepare("SELECT image_url, caption, alt_text FROM gallery_items WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $gallery_stmt = $pdo->prepare("SELECT media_id, image_url, caption, alt_text FROM gallery_items WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
     $gallery_stmt->execute([$website_id]);
     $gallery_items = $gallery_stmt->fetchAll(PDO::FETCH_ASSOC);
     $gallery = [];
     foreach ($gallery_items as $item) {
-        $gallery[] = $item['image_url']; // To match current template array structure, can adapt later
+        $gallery[] = $item['media_id'] ? $resolveMediaUrl($item['media_id']) : $item['image_url']; // To match current template array structure, can adapt later
     }
 
     // 6. Fetch Reviews
-    $reviews_stmt = $pdo->prepare("SELECT reviewer_name as client, rating, review_text as text, image_url FROM reviews WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
+    $reviews_stmt = $pdo->prepare("SELECT reviewer_name as client, rating, review_text as text, media_id, image_url FROM reviews WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
     $reviews_stmt->execute([$website_id]);
-    $reviews = $reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $reviews_raw = $reviews_stmt->fetchAll(PDO::FETCH_ASSOC);
+    $reviews = [];
+    foreach($reviews_raw as $r) {
+        $r['image_url'] = $r['media_id'] ? $resolveMediaUrl($r['media_id']) : $r['image_url'];
+        $reviews[] = $r;
+    }
 
     // 7. Fetch Social Links
     $social_stmt = $pdo->prepare("SELECT platform, url FROM social_links WHERE website_id = ? AND status = 'active' ORDER BY sort_order ASC");
@@ -257,6 +291,27 @@ function render_page($template, $data, $page = 'home') {
     }
 
     // Engine provides scoped variables for template.php to use.
+        // Engine provides scoped variables for template.php to use.
+    // Let's resolve media URLs deep inside the data scope where page sections might live.
+    // If the template needs them, we provide a global $resolveMedia helper or map it into the raw data.
+    // Since templates iterate sections blindly, we'll map the section images here:
+    if (isset($data['page']['id'])) {
+        $sec_stmt = $pdo->prepare("SELECT * FROM page_sections WHERE page_id = ? AND status = 'active' ORDER BY sort_order ASC");
+        $sec_stmt->execute([$data['page']['id']]);
+        $sections = $sec_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $parsed_sections = [];
+        foreach ($sections as $s) {
+            $content = json_decode($s['content'], true) ?: [];
+            if (isset($content['image_url'])) {
+                $content['image_url'] = $resolveMediaUrl($content['image_url']);
+            }
+            $s['content'] = $content;
+            $parsed_sections[] = $s;
+        }
+        $data['page']['sections'] = $parsed_sections;
+    }
+
     $engine = [
         'folder' => $safe_folder,
         'page_file' => $page_file,

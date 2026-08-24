@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $name = trim($_POST['name'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $price = trim($_POST['price'] ?? '');
-        // image_url to be integrated via Media Library in R4
+        $media_id_post = !empty($_POST['media_id']) ? (int)$_POST['media_id'] : null;
         $sort_order = (int)($_POST['sort_order'] ?? 0);
         $status = in_array($_POST['status'] ?? '', ['active', 'inactive']) ? $_POST['status'] : 'active';
 
@@ -41,14 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash_message('error', 'Service Name is required.');
         } else {
             if ($action === 'add') {
-                $insert = $pdo->prepare("INSERT INTO services (website_id, name, description, price, sort_order, status) VALUES (?, ?, ?, ?, ?, ?)");
-                $insert->execute([$website_id, $name, $description, $price, $sort_order, $status]);
+                $insert = $pdo->prepare("INSERT INTO services (website_id, name, description, price, media_id, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $insert->execute([$website_id, $name, $description, $price, $media_id_post, $sort_order, $status]);
                 set_flash_message('success', 'Service added successfully.');
             } else {
                 $service_id = (int)$_POST['service_id'];
                 // Ownership implicitly enforced by AND website_id = ?
-                $update = $pdo->prepare("UPDATE services SET name=?, description=?, price=?, sort_order=?, status=? WHERE id=? AND website_id=?");
-                $update->execute([$name, $description, $price, $sort_order, $status, $service_id, $website_id]);
+                $update = $pdo->prepare("UPDATE services SET name=?, description=?, price=?, media_id=?, sort_order=?, status=? WHERE id=? AND website_id=?");
+                $update->execute([$name, $description, $price, $media_id_post, $sort_order, $status, $service_id, $website_id]);
                 set_flash_message('success', 'Service updated successfully.');
             }
         }
@@ -141,6 +141,20 @@ include __DIR__ . '/../includes/user_header.php';
                                     <label class="form-label fw-medium">Price</label>
                                     <input type="text" name="price" class="form-control" placeholder="e.g. ₹15,000" value="<?= escape($srv['price']) ?>">
                                 </div>
+                                                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Service Image</label>
+                                    <select name="media_id" class="form-select">
+                                        <option value="">-- No Image --</option>
+                                        <?php
+                                        $media_stmt = $pdo->prepare("SELECT id, original_filename FROM media WHERE website_id = ? AND media_type = 'image' AND status = 'active' ORDER BY created_at DESC");
+                                        $media_stmt->execute([$website_id]);
+                                        while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                            $selected = ($srv['media_id'] == $m['id']) ? 'selected' : '';
+                                            echo '<option value="'.$m['id'].'" '.$selected.'>'.escape($m['original_filename']).'</option>';
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-medium">Description</label>
                                     <textarea name="description" class="form-control" rows="3"><?= escape($srv['description']) ?></textarea>
@@ -190,6 +204,19 @@ include __DIR__ . '/../includes/user_header.php';
                     <div class="mb-3">
                         <label class="form-label fw-medium">Price</label>
                         <input type="text" name="price" class="form-control" placeholder="e.g. ₹15,000">
+                    </div>
+                                        <div class="mb-3">
+                        <label class="form-label fw-medium">Service Image</label>
+                        <select name="media_id" class="form-select">
+                            <option value="">-- No Image --</option>
+                            <?php
+                            $media_stmt = $pdo->prepare("SELECT id, original_filename FROM media WHERE website_id = ? AND media_type = 'image' AND status = 'active' ORDER BY created_at DESC");
+                            $media_stmt->execute([$website_id]);
+                            while($m = $media_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                echo '<option value="'.$m['id'].'">'.escape($m['original_filename']).'</option>';
+                            }
+                            ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-medium">Description</label>

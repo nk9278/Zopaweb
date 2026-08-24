@@ -1,0 +1,28 @@
+# Prevent any PHP or executable script from running in the storage directory
+<FilesMatch "\.(php|php4|php5|php7|php8|phtml|phar|pl|py|cgi|exe)$">
+    Require all denied
+</FilesMatch>
+
+# Prevent directory listings
+Options -Indexes
+
+# Set default MIME types to prevent content-sniffing bypass
+ForceType application/octet-stream
+<FilesMatch "\.(jpg|jpeg)$">
+    ForceType image/jpeg
+</FilesMatch>
+<FilesMatch "\.png$">
+    ForceType image/png
+</FilesMatch>
+<FilesMatch "\.webp$">
+    ForceType image/webp
+</FilesMatch>
+<FilesMatch "\.gif$">
+    ForceType image/gif
+</FilesMatch>
+<FilesMatch "\.(mp4)$">
+    ForceType video/mp4
+</FilesMatch>
+<FilesMatch "\.(webm)$">
+    ForceType video/webm
+</FilesMatch>
