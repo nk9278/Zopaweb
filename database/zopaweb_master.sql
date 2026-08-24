@@ -490,4 +490,6 @@ ALTER TABLE `website_seo` ADD CONSTRAINT `website_seo_ibfk_1` FOREIGN KEY (`webs
 
 
 
+ALTER TABLE `domains` ADD COLUMN `provider` varchar(50) DEFAULT 'manual' AFTER `registrar`, ADD COLUMN `provider_domain_id` varchar(255) DEFAULT NULL AFTER `provider`, ADD COLUMN `provider_status` varchar(50) DEFAULT NULL AFTER `provider_domain_id`, ADD COLUMN `provider_order_id` varchar(255) DEFAULT NULL AFTER `provider_status`;
+
 COMMIT;

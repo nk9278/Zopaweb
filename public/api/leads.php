@@ -114,7 +114,7 @@ try {
     $insert = $pdo->prepare("
         INSERT INTO leads
         (website_id, name, phone, service_id, preferred_date, preferred_time, message, source, form_type, status, ip_address)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)
     ");
     $insert->execute([
         $website_id, $name, $phone, $service_id, $preferred_date, $preferred_time, $message, $source, $form_type, $ip

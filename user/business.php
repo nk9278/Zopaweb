@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update = $pdo->prepare("UPDATE business_profiles SET business_name=?, tagline=?, about=?, email=?, phone=?, whatsapp=?, address=?, city=?, logo_media_id=?, hero_media_id=? WHERE website_id=?");
             $update->execute([$business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id, $website_id]);
         } else {
-            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city, logo_media_id, hero_media_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city, logo_media_id, hero_media_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $insert->execute([$website_id, $business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id]);
         }
         set_flash_message('success', 'Business profile saved successfully.');
