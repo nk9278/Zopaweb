@@ -3,14 +3,22 @@
 
 require_once __DIR__ . '/../config/app.php';
 
+// Apply basic security headers to backend scripts globally if not already sent
+if (!headers_sent()) {
+    header("X-Content-Type-Options: nosniff");
+    header("X-Frame-Options: SAMEORIGIN");
+    header("Referrer-Policy: strict-origin-when-cross-origin");
+}
+
 // Configure secure session parameters before starting the session
 ini_set('session.use_only_cookies', 1);
 ini_set('session.use_strict_mode', 1);
+$is_secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 session_set_cookie_params([
     'lifetime' => SESSION_LIFETIME,
     'path' => '/',
     'domain' => '',
-    'secure' => false, // Set to true if using HTTPS in production
+    'secure' => $is_secure,
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
@@ -121,7 +129,8 @@ function logout_user($pdo = null) {
     }
 
     if (isset($_COOKIE['remember_me'])) {
-        setcookie('remember_me', '', time() - 3600, '/', '', false, true);
+        $is_secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        setcookie('remember_me', '', time() - 3600, '/', '', $is_secure, true);
     }
 
     $_SESSION = [];

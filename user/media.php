@@ -125,11 +125,15 @@ include __DIR__ . '/../includes/user_header.php';
 <div class="row">
     <?php if (empty($media_items)): ?>
         <div class="col-12">
-            <div class="card border-0 shadow-sm p-5 text-center">
-                <i class="bi bi-images display-4 text-muted mb-3"></i>
-                <h5>No media uploaded yet.</h5>
-                <p class="text-muted">Upload images and videos to use on your website.</p>
-                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadModal">Upload Media</button>
+            <div class="card border-0 shadow-sm p-5 text-center bg-light">
+                <i class="bi bi-images display-1 text-primary mb-3"></i>
+                <h4 class="fw-bold">No media uploaded yet</h4>
+                <p class="text-muted mb-4">Upload images and videos to use on your website.</p>
+                <div>
+                    <button type="button" class="btn btn-primary px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="bi bi-upload me-2"></i>Upload File
+                    </button>
+                </div>
             </div>
         </div>
     <?php else: ?>

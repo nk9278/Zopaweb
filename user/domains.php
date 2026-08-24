@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // In a real environment, we would use dns_get_record() to look up TXT records.
             // Since DNS E2E is BLOCKED, we will simulate a successful validation.
 
-            $update = $pdo->prepare("UPDATE domains SET verification_status = 'verified', status = 'active', connected_at = NOW() WHERE id = ?");
-            $update->execute([$domain_id]);
+            $update = $pdo->prepare("UPDATE domains SET verification_status = 'verified', status = 'active', connected_at = NOW() WHERE id = ? AND website_id = ?");
+            $update->execute([$domain_id, $website_id]);
             set_flash_message('success', 'Domain verified and active! Your website is now mapped to ' . escape($domain['domain_name']));
         }
 
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $check->execute([$domain_id, $website_id]);
 
         if ($check->fetch()) {
-            $pdo->prepare("DELETE FROM domains WHERE id = ?")->execute([$domain_id]);
+            $pdo->prepare("DELETE FROM domains WHERE id = ? AND website_id = ?")->execute([$domain_id, $website_id]);
             set_flash_message('success', 'Custom domain removed safely.');
         }
     }

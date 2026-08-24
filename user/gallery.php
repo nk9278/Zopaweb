@@ -81,18 +81,18 @@ include __DIR__ . '/../includes/user_header.php';
 
 <?php display_flash_message(); ?>
 
-<div class="alert alert-info border-0 shadow-sm mb-4">
-    <i class="bi bi-info-circle me-2"></i><strong>Note:</strong> Media upload pipeline is planned for a future update (R4). Please paste external image URLs temporarily.
-</div>
-
 <div class="row">
     <?php if (empty($gallery)): ?>
         <div class="col-12">
-            <div class="card border-0 shadow-sm p-5 text-center">
-                <i class="bi bi-images display-4 text-muted mb-3"></i>
-                <h5>No images in your gallery.</h5>
-                <p class="text-muted">Add your first portfolio image.</p>
-                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addGalleryModal">Add Image</button>
+            <div class="card border-0 shadow-sm p-5 text-center bg-light">
+                <i class="bi bi-images display-1 text-primary mb-3"></i>
+                <h4 class="fw-bold">No images in your gallery</h4>
+                <p class="text-muted mb-4">Upload your first portfolio image to showcase your work.</p>
+                <div>
+                    <button type="button" class="btn btn-primary px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#addGalleryModal">
+                        <i class="bi bi-plus-lg me-2"></i>Add First Image
+                    </button>
+                </div>
             </div>
         </div>
     <?php else: ?>

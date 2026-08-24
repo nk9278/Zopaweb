@@ -42,13 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_status') {
         $status = $_POST['status'] ?? 'new';
         if (in_array($status, ['new', 'contacted', 'converted', 'closed', 'spam'])) {
-            $upd = $pdo->prepare("UPDATE leads SET status = ? WHERE id = ?");
-            $upd->execute([$status, $lead_id]);
+            $upd = $pdo->prepare("UPDATE leads SET status = ? WHERE id = ? AND website_id = ?");
+            $upd->execute([$status, $lead_id, $website_id]);
             set_flash_message('success', 'Lead status updated.');
         }
     } elseif ($action === 'delete') {
-        $del = $pdo->prepare("DELETE FROM leads WHERE id = ?");
-        $del->execute([$lead_id]);
+        $del = $pdo->prepare("DELETE FROM leads WHERE id = ? AND website_id = ?");
+        $del->execute([$lead_id, $website_id]);
         set_flash_message('success', 'Lead permanently deleted.');
     }
     redirect('/user/leads.php');
@@ -192,10 +192,10 @@ include __DIR__ . '/../includes/user_header.php';
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <?php if (empty($leads)): ?>
-            <div class="p-5 text-center text-muted">
-                <i class="bi bi-inbox display-1 opacity-50 mb-3"></i>
-                <h4>No enquiries found</h4>
-                <p>When customers submit the lead form on your website, they will appear here.</p>
+            <div class="p-5 text-center bg-light rounded m-3">
+                <i class="bi bi-inbox display-1 text-primary mb-3"></i>
+                <h4 class="fw-bold">No leads found</h4>
+                <p class="text-muted mb-0">When customers submit the contact form on your website, they will appear here.</p>
             </div>
         <?php else: ?>
             <div class="table-responsive">

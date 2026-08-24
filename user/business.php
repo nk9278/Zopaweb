@@ -102,8 +102,9 @@ include __DIR__ . '/../includes/user_header.php';
                     <input type="text" name="phone" class="form-control" value="<?= escape($profile['phone'] ?? '') ?>">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-medium">WhatsApp</label>
+                    <label class="form-label fw-medium">WhatsApp Number</label>
                     <input type="text" name="whatsapp" class="form-control" value="<?= escape($profile['whatsapp'] ?? '') ?>" placeholder="+91 XXXXX XXXXX">
+                    <small class="text-muted d-block mt-1">Add your WhatsApp number so customers can contact you directly.</small>
                 </div>
 
                 <div class="col-md-8">

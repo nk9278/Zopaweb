@@ -65,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $insertToken = $pdo->prepare("INSERT INTO auth_tokens (user_id, selector, hashed_validator, expires_at) VALUES (?, ?, ?, ?)");
                         $insertToken->execute([$user['id'], $selector, $hashed_validator, $expires]);
 
-                        setcookie('remember_me', $selector . ':' . $validator, time() + (86400 * 30), '/', '', false, true);
+                        $is_secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+                        setcookie('remember_me', $selector . ':' . $validator, time() + (86400 * 30), '/', '', $is_secure, true);
                     }
 
                     if ($user['role'] === 'admin') {

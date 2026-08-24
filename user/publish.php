@@ -112,7 +112,16 @@ include __DIR__ . '/../includes/user_header.php';
                     <h2 class="fw-bold mb-3">Your website is live!</h2>
                     <p class="text-muted mb-4">Visitors can now access your website on your domains.</p>
 
-                    <a href="http://web.<?= escape($website['website_slug']) ?>.zopaweb.com" target="_blank" class="btn btn-primary px-4 me-2">View Live Site</a>
+                    <?php
+                        $active_domain = $website['website_slug'] . '.' . PRIMARY_PLATFORM_DOMAIN;
+                        $d_stmt = $pdo->prepare("SELECT domain_name FROM domains WHERE website_id = ? AND status = 'active' AND domain_type = 'custom' LIMIT 1");
+                        $d_stmt->execute([$website_id]);
+                        $cd = $d_stmt->fetch();
+                        if ($cd) {
+                            $active_domain = $cd['domain_name'];
+                        }
+                    ?>
+                    <a href="http://<?= escape($active_domain) ?>" target="_blank" class="btn btn-primary px-4 me-2"><i class="bi bi-box-arrow-up-right me-2"></i>View Live Site</a>
 
                     <form method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to unpublish? Your site will go offline immediately.');">
                         <?php csrf_field(); ?>
