@@ -101,7 +101,8 @@ include __DIR__ . '/../includes/user_header.php';
                 ['icon' => 'bi-search', 'label' => 'SEO Settings', 'color' => 'dark', 'link' => '/user/seo.php'],
                 ['icon' => 'bi-share', 'label' => 'Social Links', 'color' => 'primary', 'link' => '/user/social.php'],
                 ['icon' => 'bi-images', 'label' => 'Media Library', 'color' => 'dark', 'link' => '/user/media.php'],
-                ['icon' => 'bi-globe', 'label' => 'Domain', 'color' => 'dark', 'link' => '#', 'disabled' => true],
+                ['icon' => 'bi-globe', 'label' => 'Domain', 'color' => 'dark', 'link' => '/user/domains.php'],
+                ['icon' => 'bi-rocket-takeoff', 'label' => 'Publish', 'color' => 'success', 'link' => '/user/publish.php'],
             ];
 
             foreach ($tools as $tool):

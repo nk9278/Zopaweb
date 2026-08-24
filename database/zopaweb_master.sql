@@ -85,12 +85,28 @@ CREATE TABLE `templates` (
 
 -- --------------------------------------------------------
 
+-- Table structure for table `plans`
+CREATE TABLE `plans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `billing_interval` enum('monthly','yearly','lifetime') NOT NULL DEFAULT 'yearly',
+  `storage_limit` bigint(20) NOT NULL DEFAULT 52428800,
+  `custom_domain_allowed` tinyint(1) NOT NULL DEFAULT 0,
+  `active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
 -- Table structure for table `subscriptions`
 CREATE TABLE `subscriptions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `website_id` int(11) NOT NULL,
-  `media_id` int(11) DEFAULT NULL,
+  `plan_id` int(11) DEFAULT NULL,
+
   `plan_name` varchar(255) NOT NULL,
   `plan_price` decimal(10,2) NOT NULL DEFAULT 0.00,
   `billing_cycle` enum('monthly','yearly','lifetime') NOT NULL DEFAULT 'yearly',
@@ -111,7 +127,6 @@ CREATE TABLE `payments` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `website_id` int(11) NOT NULL,
-  `media_id` int(11) DEFAULT NULL,
   `subscription_id` int(11) DEFAULT NULL,
   `payment_type` enum('subscription','domain','other') NOT NULL,
   `amount` decimal(10,2) NOT NULL,
@@ -134,9 +149,10 @@ CREATE TABLE `domains` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `website_id` int(11) NOT NULL,
-  `media_id` int(11) DEFAULT NULL,
   `domain_name` varchar(255) NOT NULL,
   `domain_type` enum('subdomain','custom') NOT NULL,
+  `verification_token` varchar(255) DEFAULT NULL,
+  `verification_status` enum('unverified','verified','failed') NOT NULL DEFAULT 'unverified',
   `registrar` varchar(255) DEFAULT NULL,
   `registration_price` decimal(10,2) DEFAULT NULL,
   `renewal_price` decimal(10,2) DEFAULT NULL,
@@ -298,7 +314,8 @@ ALTER TABLE `templates`
 
 ALTER TABLE `subscriptions`
   ADD CONSTRAINT `subscriptions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `subscriptions_ibfk_2` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `subscriptions_ibfk_2` FOREIGN KEY (`website_id`) REFERENCES `websites` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `subscriptions_plan_fk` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE RESTRICT;
 
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,

@@ -49,16 +49,15 @@ function process_media_upload($pdo, $website_id, $file_array) {
 
     $extension = $is_image ? ALLOWED_IMAGE_MIMES[$mime_type] : ALLOWED_VIDEO_MIMES[$mime_type];
 
-    // Check Storage Quota
-    // R1 config has generic upload_limit in settings, but we will mock generic quota for now
-    // In Phase 12 this links to subscription.plan_storage_limit
-    $stmt = $pdo->prepare("SELECT SUM(file_size) as total_used FROM media WHERE website_id = ?");
-    $stmt->execute([$website_id]);
-    $quota = $stmt->fetch();
-    $total_used = (int)($quota['total_used'] ?? 0);
+        // Check Storage Quota
+    // R7: Dynamically pull storage_limit from the active subscription plan
+    $quota_stmt = $pdo->prepare("SELECT SUM(m.file_size) as total_used, (SELECT p.storage_limit FROM subscriptions s JOIN plans p ON s.plan_id = p.id WHERE s.website_id = ? AND s.status = 'active' ORDER BY s.id DESC LIMIT 1) as storage_limit FROM media m WHERE m.website_id = ?");
+    $quota_stmt->execute([$website_id, $website_id]);
+    $quota = $quota_stmt->fetch(PDO::FETCH_ASSOC);
 
-    // Hardcoded 500MB generic limit for R4 until Phase 12 maps it perfectly
-    $limit_bytes = 500 * 1048576;
+    $total_used = (int)($quota['total_used'] ?? 0);
+    $limit_bytes = (int)($quota['storage_limit'] ?? 52428800); // Fallback to 50MB Free limit if unmapped
+
     if (($total_used + $file_size) > $limit_bytes) {
         return ['success' => false, 'error' => 'Storage quota exceeded. Please upgrade your plan.'];
     }
