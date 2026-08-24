@@ -53,11 +53,13 @@ if (!empty($_POST['website_url_hp'])) {
 // 2. Rate Limiting (Simple IP based Flood Protection)
 $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 // Check if more than 5 leads in the last hour from this IP
-$rate_stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE website_id = ? AND created_at > (NOW() - INTERVAL 1 HOUR)");
-$rate_stmt->execute([$website_id]);
-if ($rate_stmt->fetchColumn() >= 10) { // Limit 10 leads per hour globally for small business logic
+// Check if more than 5 leads in the last hour from this IP
+$ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$rate_stmt = $pdo->prepare("SELECT COUNT(*) FROM leads WHERE website_id = ? AND ip_address = ? AND created_at > (NOW() - INTERVAL 1 HOUR)");
+$rate_stmt->execute([$website_id, $ip]);
+if ($rate_stmt->fetchColumn() >= 5) {
     http_response_code(429);
-    echo json_encode(['success' => false, 'error' => 'Too many requests. Please try again later.']);
+    echo json_encode(['success' => false, 'error' => 'Too many requests from your IP. Please try again later.']);
     die();
 }
 
