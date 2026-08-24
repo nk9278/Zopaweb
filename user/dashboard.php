@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/security.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../config/database.php';
 
-require_role('user'); // Also need to handle 'creator' role potentially later, but basic user access
+require_role('user');
 $pdo = getDB();
 $user_id = $_SESSION['user_id'];
 
@@ -13,7 +13,6 @@ $stmt = $pdo->prepare("SELECT * FROM websites WHERE user_id = ? AND deleted_at I
 $stmt->execute([$user_id]);
 $website = $stmt->fetch();
 
-// Determine placeholders based on whether website is created yet
 $website_status = $website ? $website['status'] : 'No Website';
 $website_name = $website ? $website['website_name'] : 'Not Set';
 $website_slug = $website ? $website['website_slug'] : '';
@@ -28,103 +27,131 @@ if ($template_id) {
     if ($t) $template_name = $t['name'];
 }
 
+$page_title = "My Dashboard";
+include __DIR__ . '/../includes/user_header.php';
 ?>
-<?php require_once __DIR__ . '/../includes/user_header.php'; ?>
 
-<div class="row g-4 mb-5">
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm h-100">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+    <?php if ($website && $website['publication_status'] === 'published'): ?>
+        <a href="http://<?= escape($website_slug) ?>.<?= PRIMARY_PLATFORM_DOMAIN ?>" class="btn btn-outline-primary" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Visit Live Site</a>
+    <?php endif; ?>
+</div>
+
+<?php display_flash_message(); ?>
+
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Website Status Card -->
+        <div class="card mb-4 border-0 shadow-sm">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="mb-0">My Website</h4>
-                    <?php if ($website): ?>
-                        <span class="badge bg-<?= $website['status'] === 'active' ? 'success' : 'warning' ?>">
-                            <?= escape(ucfirst($website['status'])) ?>
-                        </span>
-                    <?php endif; ?>
-                </div>
-
                 <?php if ($website): ?>
-                    <div class="mb-4">
-                        <h2 class="fw-bold mb-1"><?= escape($website_name) ?></h2>
-                        <a href="http://web.<?= escape($website_slug) ?>.zopaweb.com" target="_blank" class="text-primary text-decoration-none">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> web.<?= escape($website_slug) ?>.zopaweb.com
-                        </a>
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="fw-bold mb-1"><?= escape($website_name) ?></h2>
+                            <p class="text-muted mb-0">web.<?= escape($website_slug) ?>.zopaweb.com</p>
+                        </div>
+                        <span class="badge <?= $website_status === 'active' ? 'bg-success' : 'bg-secondary' ?> px-3 py-2 rounded-pill"><?= escape(ucfirst($website_status)) ?></span>
                     </div>
 
                     <div class="row g-3 mb-4">
-                        <div class="col-sm-6">
-                            <div class="p-3 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold mb-1">Current Template</small>
-                                <span class="fs-5"><?= escape($template_name) ?></span>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 text-center h-100">
+                                <span class="d-block text-muted small fw-bold text-uppercase mb-1">Status</span>
+                                <span class="fs-5 fw-medium"><?= escape(ucfirst($website['publication_status'])) ?></span>
                             </div>
                         </div>
-                        <div class="col-sm-6">
-                            <div class="p-3 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold mb-1">Current Plan</small>
-                                <span class="fs-5"><?= escape($current_plan) ?> Plan</span>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 text-center h-100">
+                                <span class="d-block text-muted small fw-bold text-uppercase mb-1">Plan</span>
+                                <span class="fs-5 fw-medium text-primary"><?= escape($current_plan) ?></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 text-center h-100">
+                                <span class="d-block text-muted small fw-bold text-uppercase mb-1">Template</span>
+                                <span class="fs-5 fw-medium"><?= escape($template_name) ?></span>
                             </div>
                         </div>
                     </div>
                 <?php else: ?>
-                    <div class="empty-state">
-                        <i class="bi bi-globe empty-state-icon"></i>
+                    <div class="text-center py-5">
+                        <div class="display-1 text-muted mb-3"><i class="bi bi-laptop"></i></div>
                         <h5>You haven't created a website yet.</h5>
                         <p class="text-muted">Get started by setting up your professional makeup artist portfolio.</p>
-                        <button class="btn btn-primary" disabled>Create Website (Phase 2)</button>
+                        <button class="btn btn-primary" disabled>Create Website</button>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
+
+        <?php if ($website): ?>
+        <!-- Management Tools -->
+        <h4 class="fw-bold mb-3 mt-5">Manage Website</h4>
+        <div class="row g-3">
+            <?php
+            $tools = [
+                ['icon' => 'bi-layout-text-window', 'label' => 'Pages', 'color' => 'primary', 'link' => '/user/pages.php'],
+                ['icon' => 'bi-shop', 'label' => 'Business Profile', 'color' => 'success', 'link' => '/user/business.php'],
+                ['icon' => 'bi-stars', 'label' => 'Services', 'color' => 'info', 'link' => '/user/services.php'],
+                ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning', 'link' => '/user/gallery.php'],
+                ['icon' => 'bi-chat-quote', 'label' => 'Reviews', 'color' => 'danger', 'link' => '/user/reviews.php'],
+                ['icon' => 'bi-palette', 'label' => 'Theme', 'color' => 'secondary', 'link' => '/user/theme.php'],
+                ['icon' => 'bi-share', 'label' => 'Social Links', 'color' => 'primary', 'link' => '/user/social.php'],
+                ['icon' => 'bi-globe', 'label' => 'Domain', 'color' => 'dark', 'link' => '#', 'disabled' => true],
+            ];
+
+            foreach ($tools as $tool):
+            ?>
+            <div class="col-md-4 col-sm-6">
+                <a href="<?= isset($tool['disabled']) && $tool['disabled'] ? '#' : $tool['link'] ?>" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift <?= isset($tool['disabled']) && $tool['disabled'] ? 'opacity-50' : '' ?>">
+                    <div class="card-body text-center p-4">
+                        <div class="text-<?= $tool['color'] ?> fs-1 mb-2">
+                            <i class="bi <?= $tool['icon'] ?>"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-0"><?= $tool['label'] ?></h6>
+                        <?php if (isset($tool['disabled']) && $tool['disabled']): ?>
+                            <span class="badge bg-secondary mt-2">Coming Soon</span>
+                        <?php endif; ?>
+                    </div>
+                </a>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
-            <div class="card-body p-4 d-flex flex-column justify-content-center text-center">
-                <i class="bi bi-star-fill display-4 mb-3 text-warning"></i>
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-white py-3 fw-bold">
+                Quick Actions
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="<?= $website ? '/user/templates.php' : '#' ?>" class="list-group-item list-group-item-action py-3 <?= !$website ? 'disabled' : '' ?>">
+                    <i class="bi bi-palette text-muted me-2"></i> Change Template
+                </a>
+                <a href="#" class="list-group-item list-group-item-action py-3 disabled">
+                    <i class="bi bi-envelope-paper text-muted me-2"></i> Lead Inbox
+                </a>
+                <a href="#" class="list-group-item list-group-item-action py-3 disabled">
+                    <i class="bi bi-graph-up text-muted me-2"></i> Analytics
+                </a>
+            </div>
+        </div>
+
+        <!-- Upgrade Prompt -->
+        <div class="card border-0 shadow-sm bg-primary text-white text-center p-4">
+            <div class="card-body">
+                <i class="bi bi-rocket-takeoff display-4 mb-3"></i>
                 <h4 class="fw-bold mb-3">Upgrade to Pro</h4>
                 <p class="mb-4">Get a custom domain, premium templates, and unlimited storage to grow your business.</p>
-                <button class="btn btn-light text-primary fw-bold" disabled>View Plans (Phase 2)</button>
+                <button class="btn btn-light text-primary fw-bold" disabled>View Plans</button>
             </div>
         </div>
     </div>
 </div>
 
-<h4 class="mb-3">Quick Actions</h4>
-<div class="row g-3 mb-4">
-    <?php
-    $actions = [
-        ['icon' => 'bi-pencil-square', 'label' => 'Edit Website', 'color' => 'primary', 'link' => '#', 'disabled' => true],
-        ['icon' => 'bi-eye', 'label' => 'Preview', 'color' => 'info', 'link' => $website ? '/public/site.php?website_id=' . $website['id'] : '#', 'disabled' => !$website, 'target' => '_blank'],
-        ['icon' => 'bi-palette', 'label' => 'Templates', 'color' => 'success', 'link' => '/user/templates.php', 'disabled' => false],
-        ['icon' => 'bi-images', 'label' => 'Gallery', 'color' => 'warning', 'link' => '#', 'disabled' => true],
-        ['icon' => 'bi-envelope', 'label' => 'Enquiries', 'color' => 'danger', 'link' => '#', 'disabled' => true],
-        ['icon' => 'bi-globe2', 'label' => 'Domain', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
-        ['icon' => 'bi-credit-card', 'label' => 'Subscription', 'color' => 'dark', 'link' => '#', 'disabled' => true],
-        ['icon' => 'bi-gear', 'label' => 'Settings', 'color' => 'secondary', 'link' => '#', 'disabled' => true],
-    ];
-    ?>
-
-    <?php foreach ($actions as $action): ?>
-        <div class="col-6 col-md-3">
-            <?php if ($action['disabled']): ?>
-                <button class="card border-0 shadow-sm w-100 h-100 text-center p-4 btn btn-light" disabled style="opacity: 0.7;">
-                    <i class="bi <?= $action['icon'] ?> fs-2 text-<?= $action['color'] ?> mb-2"></i>
-                    <span class="fw-bold d-block"><?= $action['label'] ?></span>
-                </button>
-            <?php else: ?>
-                <a href="<?= $action['link'] ?>" <?= isset($action['target']) ? 'target="'.$action['target'].'"' : '' ?> class="card border-0 shadow-sm w-100 h-100 text-center p-4 btn btn-light text-decoration-none" style="transition: transform 0.2s; cursor: pointer;">
-                    <i class="bi <?= $action['icon'] ?> fs-2 text-<?= $action['color'] ?> mb-2"></i>
-                    <span class="fw-bold d-block text-dark"><?= $action['label'] ?></span>
-                </a>
-            <?php endif; ?>
-        </div>
-    <?php endforeach; ?>
-</div>
-
-<div class="alert alert-info text-center border-0 shadow-sm">
-    <i class="bi bi-info-circle me-2"></i>
-    Advanced website building features and actions will be available in future phases.
-</div>
-
-<?php require_once __DIR__ . '/../includes/user_footer.php'; ?>
+<?php include __DIR__ . '/../includes/user_footer.php'; ?>
