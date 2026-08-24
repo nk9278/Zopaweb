@@ -1,0 +1,12 @@
+# Prevent public access to raw template files
+<FilesMatch "\.(?i:php|json)$">
+    Require all denied
+</FilesMatch>
+
+# Allow public access to assets directory inside templates
+<FilesMatch "\.(?i:css|js|woff|woff2|ttf|eot|png|jpg|jpeg|gif|svg|webp|ico)$">
+    Require all granted
+</FilesMatch>
+
+# Phase 13 Directory Listing Protection
+Options -Indexes

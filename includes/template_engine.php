@@ -31,6 +31,11 @@ function get_website_data($pdo, $website_id) {
         return null;
     }
 
+    // Fetch Custom Theme Data
+    $theme_stmt = $pdo->prepare("SELECT * FROM website_themes WHERE website_id = ?");
+    $theme_stmt->execute([$website_id]);
+    $theme_settings = $theme_stmt->fetch(PDO::FETCH_ASSOC);
+
     // 2. Fetch Theme/Template Data
     $template_stmt = $pdo->prepare("SELECT * FROM templates WHERE id = ?");
     $template_stmt->execute([$website['template_id']]);
@@ -54,11 +59,30 @@ function get_website_data($pdo, $website_id) {
         ['name' => 'Editorial Shoot', 'price' => '₹10,000', 'description' => 'Creative makeup for fashion and photography.']
     ];
 
-    $gallery = [
-        'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800'
-    ];
+    // Fetch Gallery from DB
+    $gal_stmt = $pdo->prepare("
+        SELECT m.webp_path, m.alt_text, m.caption
+        FROM galleries g
+        JOIN media m ON g.media_id = m.id
+        WHERE g.website_id = ? AND g.status = 'visible' AND g.deleted_at IS NULL AND m.deleted_at IS NULL
+        ORDER BY g.sort_order ASC, g.id DESC
+    ");
+    $gal_stmt->execute([$website_id]);
+    $gallery_records = $gal_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $gallery = [];
+    if (!empty($gallery_records)) {
+        foreach ($gallery_records as $g) {
+            $gallery[] = $g['webp_path']; // The templates currently expect an array of string URLs
+        }
+    } else {
+        // Fallback to demo images if empty for preview purposes
+        $gallery = [
+            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1596704017254-9b121068fb31?auto=format&fit=crop&q=80&w=800'
+        ];
+    }
 
     $reviews = [
         ['client' => 'Priya S.', 'rating' => 5, 'text' => 'Absolutely loved my bridal look! Highly recommended.'],
@@ -70,14 +94,27 @@ function get_website_data($pdo, $website_id) {
         'facebook' => '#'
     ];
 
+    // Fetch Navigation Pages
+    $nav_stmt = $pdo->prepare("SELECT title, slug FROM pages WHERE website_id = ? AND status = 'published' AND show_in_nav = 1 AND deleted_at IS NULL ORDER BY sort_order ASC");
+    $nav_stmt->execute([$website_id]);
+    $navigation = $nav_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Fetch SEO Config
+    $seo_stmt = $pdo->prepare("SELECT s.*, m.webp_path as og_image_url FROM website_seo s LEFT JOIN media m ON s.og_image_id = m.id WHERE s.website_id = ?");
+    $seo_stmt->execute([$website_id]);
+    $website_seo = $seo_stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
     return [
         'site' => $website,
         'template' => $template,
+        'theme_settings' => $theme_settings ?: [],
         'business' => $business,
         'services' => $services,
         'gallery' => $gallery,
         'reviews' => $reviews,
-        'social' => $social
+        'social' => $social,
+        'navigation' => $navigation,
+        'website_seo' => $website_seo
     ];
 }
 
@@ -193,45 +230,287 @@ function render_layout($folder_key, $layout_name, $data = []) {
 }
 
 /**
- * Safely render a full template page.
+ * Safely render a full template page dynamically.
  * @param array $template Database record of the template
  * @param array $data The isolated website data
- * @param string $page The specific page to render (default 'home')
+ * @param string $page_slug The specific page to render (default 'home')
  * @return void
  */
-function render_page($template, $data, $page = 'home') {
+function render_page($template, $data, $page_slug = 'home') {
+    global $pdo;
+
     if (!$template || empty($template['folder_key'])) {
-        // Fallback safety
         render_fallback();
         return;
     }
 
     $safe_folder = basename($template['folder_key']);
-    $safe_page = basename($page);
+    $website_id = $data['site']['id'];
 
-    // Check if the requested page is supported by the template manifest
-    $validation = validate_template_manifest($safe_folder);
-    $supported_pages = $validation['manifest']['pages'] ?? ['home', 'about', 'services', 'gallery', 'contact'];
+    // Verify Page Exists and is Published
+    $page_stmt = $pdo->prepare("SELECT * FROM pages WHERE website_id = ? AND slug = ? AND deleted_at IS NULL LIMIT 1");
+    $page_stmt->execute([$website_id, $page_slug]);
+    $page_record = $page_stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!in_array($safe_page, $supported_pages)) {
-        render_404();
-        return;
+    // Draft Preview Logic: If a session exists and user owns the site, they can view drafts.
+    // Otherwise, 404 for drafts/unpublished/archived.
+    $is_owner = (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $data['site']['user_id']);
+
+    $legacy_file = __DIR__ . "/../templates/{$safe_folder}/pages/" . basename($page_slug) . ".php";
+
+    if (!$page_record) {
+        // Always fallback to legacy pages if no DB record is found to prevent breaking existing sites
+        if (!file_exists($legacy_file)) {
+            render_404(); return;
+        }
+    } else {
+        if ($page_record['status'] !== 'published' && !$is_owner) {
+            render_404();
+            return;
+        }
     }
 
     $template_file = __DIR__ . "/../templates/{$safe_folder}/template.php";
-    $page_file = __DIR__ . "/../templates/{$safe_folder}/pages/{$safe_page}.php";
-
-    if (!file_exists($template_file) || !file_exists($page_file)) {
-        render_fallback("Template files missing.");
+    if (!file_exists($template_file)) {
+        render_fallback("Template file missing.");
         return;
     }
+
+    // Load manifest to get capabilities and defaults
+    $manifest = json_decode(file_get_contents(__DIR__ . "/../templates/{$safe_folder}/template.json"), true) ?: [];
+    $theme_defaults = $manifest['theme_defaults'] ?? [];
+    $supported_sections = $manifest['supports']['sections'] ?? [];
+
+    $theme_settings = $data['theme_settings'] ?? [];
+    $theme_css = generate_theme_css($theme_settings, $theme_defaults);
+    $google_fonts_url = generate_google_fonts_url($theme_settings, $theme_defaults);
+
+    // Fetch and render sections
+    $rendered_sections = '';
+
+    if ($page_record) {
+        $sec_stmt = $pdo->prepare("SELECT * FROM page_sections WHERE page_id = ? AND status = 'visible' AND deleted_at IS NULL ORDER BY sort_order ASC");
+        $sec_stmt->execute([$page_record['id']]);
+        $sections = $sec_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        ob_start();
+        foreach ($sections as $section) {
+            $type = $section['section_type'];
+            // Check if template supports it
+            if (!empty($supported_sections[$type])) {
+                $component_path = __DIR__ . "/../templates/{$safe_folder}/components/{$type}.php";
+                if (file_exists($component_path)) {
+                    $section_settings = json_decode($section['settings_json'], true) ?: [];
+                    $section_content = json_decode($section['content_json'], true) ?: [];
+
+                    // Remap variables for backward compatibility with phase 6 sections
+                    // e.g. some templates expect $services instead of pulling from $data['services']
+                    // and $business instead of $data['business']
+
+                    extract($data); // Re-extract so components get fresh $business, $services, etc.
+                    include $component_path;
+                }
+            } else {
+                echo "<!-- Section type '{$type}' is not supported by the current template. -->\n";
+            }
+        }
+        $rendered_sections = ob_get_clean();
+    } else {
+        // Legacy fallback rendering
+        ob_start();
+        extract($data);
+        include $legacy_file;
+        $rendered_sections = ob_get_clean();
+    }
+
+    // --- Phase 11 SEO & Metadata Generation ---
+    $seo_config = $data['website_seo'] ?? [];
+
+    // Base URL structure securely derived from database slug
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
+
+    // Check if site has an active custom domain in DB mapping
+    $dom_stmt = $pdo->prepare("SELECT domain_name FROM domains WHERE website_id = ? AND domain_type = 'custom' AND status = 'active' LIMIT 1");
+    $dom_stmt->execute([$website_id]);
+    $active_domain = $dom_stmt->fetchColumn();
+
+    if ($active_domain) {
+        $base_url = $protocol . $active_domain;
+    } else {
+        $website_slug = $data['site']['website_slug'] ?? 'demo';
+        $base_url = "https://web.{$website_slug}.zopaweb.com";
+    }
+
+    // Determine Page Image
+    $page_image_url = null;
+    if (!empty($page_record['seo_image_id'])) {
+        $img_stmt = $pdo->prepare("SELECT webp_path FROM media WHERE id = ?");
+        $img_stmt->execute([$page_record['seo_image_id']]);
+        $page_image_url = $img_stmt->fetchColumn();
+    }
+
+    // Fallback logic
+    $title = !empty($page_record['seo_title']) ? $page_record['seo_title'] : (!empty($page_record['title']) ? $page_record['title'] . ' | ' . ($data['business']['name']??'') : (!empty($seo_config['seo_title']) ? $seo_config['seo_title'] : ($data['business']['name'] ?? 'Makeup Artist')));
+    $desc = !empty($page_record['seo_description']) ? $page_record['seo_description'] : (!empty($seo_config['seo_description']) ? $seo_config['seo_description'] : ($data['business']['tagline'] ?? ''));
+    $image = $page_image_url ?: (!empty($seo_config['og_image_url']) ? $seo_config['og_image_url'] : (!empty($data['business']['hero_image']) ? $data['business']['hero_image'] : ''));
+
+    $canonical = rtrim($base_url, '/') . '/' . ($page_slug === 'home' ? '' : ltrim($page_slug, '/'));
+
+    // Robots Logic
+    $r_index = 'index';
+    $r_follow = 'follow';
+
+    if ($page_record && $page_record['status'] !== 'published') {
+        // Specifically drafted database pages
+        $r_index = 'noindex';
+        $r_follow = 'nofollow';
+    } else {
+        // Fallbacks for published database pages OR legacy static files
+        if (isset($page_record['robots_index']) && $page_record['robots_index'] === 0) $r_index = 'noindex';
+        elseif (isset($seo_config['robots_index']) && $seo_config['robots_index'] === 0) $r_index = 'noindex';
+
+        if (isset($page_record['robots_follow']) && $page_record['robots_follow'] === 0) $r_follow = 'nofollow';
+        elseif (isset($seo_config['robots_follow']) && $seo_config['robots_follow'] === 0) $r_follow = 'nofollow';
+    }
+
+    // Map Address if available
+    $address = [];
+    if (!empty($data['business']['street'])) $address['streetAddress'] = $data['business']['street'];
+    if (!empty($data['business']['city'])) $address['addressLocality'] = $data['business']['city'];
+    if (!empty($data['business']['state'])) $address['addressRegion'] = $data['business']['state'];
+    if (!empty($data['business']['postal_code'])) $address['postalCode'] = $data['business']['postal_code'];
+    if (!empty($data['business']['country'])) $address['addressCountry'] = $data['business']['country'];
+
+    // Map Social URLs (SameAs)
+    $sameAs = [];
+    if (!empty($data['social']['instagram'])) $sameAs[] = $data['social']['instagram'];
+    if (!empty($data['social']['facebook'])) $sameAs[] = $data['social']['facebook'];
+    if (!empty($data['social']['youtube'])) $sameAs[] = $data['social']['youtube'];
+    if (!empty($data['social']['pinterest'])) $sameAs[] = $data['social']['pinterest'];
+    $sameAs = array_filter($sameAs);
+
+    // Schema.org Structured Data
+    $schema = [
+        "@context" => "https://schema.org",
+        "@type" => !empty($seo_config['business_type']) ? $seo_config['business_type'] : "LocalBusiness",
+        "name" => $data['business']['name'] ?? '',
+        "url" => $base_url,
+        "telephone" => $data['business']['phone'] ?? '',
+        "address" => !empty($address) ? array_merge(['@type' => 'PostalAddress'], $address) : null,
+        "sameAs" => !empty($sameAs) ? array_values($sameAs) : null
+    ];
+    if ($image) $schema["image"] = (strpos($image, 'http') === 0 ? '' : $base_url) . $image;
+
+    $schema_json = json_encode(array_filter($schema), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+
+    $og_title = (!empty($page_record['og_title'])) ? $page_record['og_title'] : $title;
+    $og_desc = (!empty($page_record['og_description'])) ? $page_record['og_description'] : $desc;
+    $canonical = (!empty($page_record['canonical_url'])) ? $page_record['canonical_url'] : $canonical;
+
+    $seo = [
+        'title' => $title,
+        'og_title' => $og_title,
+        'description' => $desc,
+        'og_description' => $og_desc,
+        'image' => $image,
+        'canonical' => $canonical,
+        'robots' => "{$r_index}, {$r_follow}",
+        'twitter_card' => $seo_config['twitter_card'] ?? 'summary_large_image',
+        'type' => $page_slug === 'home' ? 'website' : 'article',
+        'schema_json' => $schema_json
+    ];
+    // --- End SEO ---
 
     // Engine provides scoped variables for template.php to use.
     $engine = [
         'folder' => $safe_folder,
-        'page_file' => $page_file,
-        'data' => $data
+        'page_content' => $rendered_sections,
+        'data' => $data,
+        'theme_css' => $theme_css,
+        'google_fonts_url' => $google_fonts_url,
+        'theme_settings' => $theme_settings,
+        'theme_defaults' => $theme_defaults,
+        'page_record' => $page_record // Passes page metadata
     ];
+
+    // Render floating WhatsApp if configured and number exists
+    $opts = json_decode($theme_settings['options_json'] ?? '{}', true) ?: [];
+    if (!empty($opts['floating_wa']) && !empty($business['whatsapp'])) {
+        $clean_wa = preg_replace('/[^0-9]/', '', $business['whatsapp']);
+        // Append it directly to the rendered page content
+        $engine['page_content'] .= '
+            <a href="https://wa.me/' . $clean_wa . '" target="_blank" class="zopa-floating-wa" onclick="if(window.zopaTrackEvent) window.zopaTrackEvent(\'whatsapp_click\', \'floating_btn\');">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+                  <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                </svg>
+            </a>
+            <style>
+            .zopa-floating-wa {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #25D366;
+                color: white;
+                border-radius: 50%;
+                width: 60px;
+                height: 60px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                z-index: 9999;
+                transition: transform 0.3s;
+            }
+            .zopa-floating-wa:hover {
+                transform: scale(1.1);
+                color: white;
+            }
+            </style>
+        ';
+    }
+
+    // Inject Global Analytics Tracker
+    $engine['page_content'] .= '
+        <script>
+        window.zopaTrackEvent = function(eventType, sectionType) {
+            fetch("/api/event.php", {
+                method: "POST",
+                headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                body: "website_id=" + encodeURIComponent("' . $website_id . '") + "&event_type=" + encodeURIComponent(eventType) + "&section_type=" + encodeURIComponent(sectionType || "") + "&page_path=" + encodeURIComponent(window.location.pathname)
+            }).catch(e => console.log("Analytics error"));
+        };
+        // Auto-bind tel links
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll("a[href^=\'tel:\']").forEach(a => {
+                a.addEventListener("click", () => window.zopaTrackEvent("call_click", "auto_tel"));
+            });
+        });
+        </script>
+    ';
+
+    // Phase 13 Lightweight Anti-Scraping / Right-Click Protection
+    // Adds a script to prevent casual image dragging and right-clicking on the public template preview areas,
+    // while keeping form inputs accessible.
+    $engine['page_content'] .= '
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.addEventListener("contextmenu", function(e) {
+                // Allow right click on form elements
+                if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") {
+                    return true;
+                }
+                e.preventDefault();
+                return false;
+            });
+            document.addEventListener("dragstart", function(e) {
+                if (e.target.tagName === "IMG") {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+        </script>
+    ';
 
     // Delegate rendering control to the template's master file.
     extract($data); // Expose $site, $business, etc.
@@ -286,4 +565,133 @@ function render_404() {
         echo "<h1>404 Not Found</h1><p>The page you requested does not exist.</p>";
         echo "</body></html>";
     }
+}
+
+
+/**
+ * Generates the safe theme CSS block based on custom settings and defaults.
+ * @param array $settings User's custom settings from website_themes
+ * @param array $defaults Template defaults from template.json
+ * @return string CSS <style> block
+ */
+function generate_theme_css($settings, $defaults) {
+    $css_vars = [];
+
+    // Valid color mapping
+    $color_keys = [
+        'primary_color', 'secondary_color', 'accent_color', 'background_color',
+        'surface_color', 'text_color', 'heading_color', 'muted_color',
+        'button_color', 'button_text_color', 'border_color'
+    ];
+
+    foreach ($color_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['colors'][$key] ?? null);
+        if ($val) {
+            // Very strict validation: must be a hex color
+            if (preg_match('/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $val)) {
+                $css_var_name = '--' . str_replace('_', '-', $key);
+                $css_vars[] = "    {$css_var_name}: {$val};";
+            }
+        }
+    }
+
+    // Typography mapping
+    $font_keys = ['heading_font', 'body_font', 'accent_font'];
+    $allowed_fonts = [
+        'Poppins' => "'Poppins', sans-serif",
+        'Inter' => "'Inter', sans-serif",
+        'Playfair Display' => "'Playfair Display', serif",
+        'DM Sans' => "'DM Sans', sans-serif",
+        'Montserrat' => "'Montserrat', sans-serif",
+        'Cormorant Garamond' => "'Cormorant Garamond', serif",
+        'Lora' => "'Lora', serif",
+        'Manrope' => "'Manrope', sans-serif",
+        'Outfit' => "'Outfit', sans-serif",
+        'Libre Baskerville' => "'Libre Baskerville', serif",
+        'Lato' => "'Lato', sans-serif"
+    ];
+
+    foreach ($font_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val && isset($allowed_fonts[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$allowed_fonts[$val]};";
+        }
+    }
+
+    // Scale mapping
+    $scale_keys = ['heading_scale', 'body_scale'];
+    $allowed_scales = [
+        'Small' => '0.9',
+        'Medium' => '1',
+        'Large' => '1.1'
+    ];
+
+    foreach ($scale_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val && isset($allowed_scales[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$allowed_scales[$val]};";
+        }
+    }
+
+    // Styles (buttons, border radius, etc. mapping)
+    // Map abstract names to actual CSS values where possible, or just export the abstract name and handle in CSS
+    $style_keys = [
+        'border_radius' => [
+            'Sharp' => '0px',
+            'Soft' => '4px',
+            'Rounded' => '8px',
+            'Pill' => '9999px'
+        ],
+        'shadow_style' => [
+            'None' => 'none',
+            'Subtle' => '0 2px 4px rgba(0,0,0,0.05)',
+            'Medium' => '0 4px 6px rgba(0,0,0,0.1)',
+            'Soft Luxury' => '0 10px 30px rgba(0,0,0,0.08)'
+        ]
+    ];
+
+    foreach ($style_keys as $key => $mapping) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['styles'][$key] ?? null);
+        if ($val && isset($mapping[$val])) {
+            $css_var_name = '--' . str_replace('_', '-', $key);
+            $css_vars[] = "    {$css_var_name}: {$mapping[$val]};";
+        }
+    }
+
+    if (empty($css_vars)) {
+        return '';
+    }
+
+    $css = "<style>\n:root {\n" . implode("\n", $css_vars) . "\n}\n</style>";
+    return $css;
+}
+
+/**
+ * Helper to get Google Fonts URL based on selected fonts
+ */
+function generate_google_fonts_url($settings, $defaults) {
+    $font_keys = ['heading_font', 'body_font', 'accent_font'];
+    $fonts_to_load = [];
+
+    foreach ($font_keys as $key) {
+        $val = !empty($settings[$key]) ? $settings[$key] : ($defaults['typography'][$key] ?? null);
+        if ($val) {
+            $fonts_to_load[] = urlencode($val);
+        }
+    }
+
+    $fonts_to_load = array_unique(array_filter($fonts_to_load));
+
+    if (empty($fonts_to_load)) {
+        return '';
+    }
+
+    $family_str = '';
+    foreach ($fonts_to_load as $font) {
+        $family_str .= "family=" . $font . ":ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&";
+    }
+
+    return "https://fonts.googleapis.com/css2?{$family_str}display=swap";
 }

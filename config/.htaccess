@@ -1,0 +1,5 @@
+# Prevent public access to config
+Require all denied
+
+# Phase 13 Directory Listing Protection
+Options -Indexes

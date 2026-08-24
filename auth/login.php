@@ -20,6 +20,11 @@ if (is_logged_in()) {
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Phase 13 Login Rate Limiting (max 10 per 5 min)
+    if (check_api_rate_limit($pdo, 'login_attempt', 10, '5 MINUTE')) {
+        set_flash_message('error', 'Too many login attempts. Please try again later.');
+        redirect('/auth/login.php');
+    }
     $token = $_POST['csrf_token'] ?? '';
     if (!verify_csrf_token($token)) {
         $errors[] = "Invalid security token. Please try again.";

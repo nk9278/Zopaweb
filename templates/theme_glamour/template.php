@@ -1,5 +1,7 @@
 <?php
 // templates/theme_glamour/template.php
+// Master layout file. $engine array is provided by template_engine.php
+
 $css_url = template_asset_url($engine['folder'], 'css/style.css');
 ?>
 <!DOCTYPE html>
@@ -7,36 +9,62 @@ $css_url = template_asset_url($engine['folder'], 'css/style.css');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= escape($seo['title'] ?? ($business['name'] ?? 'Glamour Artist')) ?></title>
+    <title><?= escape($seo['title'] ?? ($business['name'] ?? 'Makeup Artist')) ?></title>
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta name="robots" content="<?= escape($seo['robots'] ?? 'index, follow') ?>">
     <link rel="canonical" href="<?= escape($seo['canonical'] ?? '') ?>">
 
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?= escape($seo['title'] ?? '') ?>">
-    <meta property="og:description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta property="og:title" content="<?= escape($seo['og_title'] ?? $seo['title'] ?? '') ?>">
+    <meta property="og:description" content="<?= escape($seo['og_description'] ?? $seo['description'] ?? '') ?>">
     <meta property="og:image" content="<?= escape($seo['image'] ?? '') ?>">
     <meta property="og:url" content="<?= escape($seo['canonical'] ?? '') ?>">
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="<?= escape($seo['type'] ?? 'website') ?>">
 
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="<?= escape($seo['twitter_card'] ?? 'summary_large_image') ?>">
+    <meta name="twitter:title" content="<?= escape($seo['title'] ?? '') ?>">
+    <meta name="twitter:description" content="<?= escape($seo['description'] ?? '') ?>">
+    <meta name="twitter:image" content="<?= escape($seo['image'] ?? '') ?>">
+
+    <!-- Schema.org JSON-LD -->
+    <?php if (!empty($seo['schema_json'])): ?>
+    <script type="application/ld+json">
+    <?= $seo['schema_json'] ?>
+    </script>
+    <?php endif; ?>
+
+    <!-- Template isolated CSS -->
     <link rel="stylesheet" href="<?= escape($css_url) ?>">
-    <!-- Google Fonts for Glamour -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts dynamically loaded -->
+    <?php if (!empty($engine['google_fonts_url'])): ?>
+    <link href="<?= escape($engine['google_fonts_url']) ?>" rel="stylesheet">
+    <?php else: ?>
+    <!-- Fallback if missing -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
+    <?php endif; ?>
+
+    <!-- Injected Theme CSS from Phase 7 -->
+    <?= $engine['theme_css'] ?? '' ?>
 </head>
 <body class="zopa-template <?= escape($engine['folder']) ?>">
 
-    <header class="header">
-        <div class="logo"><?= strtoupper(escape($business['name'] ?? 'GLAMOUR')) ?></div>
-    </header>
+    <?php render_layout($engine['folder'], 'header', $engine['data']); ?>
 
     <main>
-        <?php include $engine['page_file']; ?>
+        <?= $engine['page_content'] ?? '' ?>
     </main>
 
-    <footer class="footer">
-        <p>&copy; <?= date('Y') ?> <?= escape($business['name'] ?? 'Brand Name') ?>.</p>
-    </footer>
+    <?php render_layout($engine['folder'], 'footer', $engine['data']); ?>
 
+    <script>
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'UPDATE_CSS_VAR') {
+                document.documentElement.style.setProperty(event.data.variable, event.data.value);
+            }
+        });
+    </script>
 </body>
 </html>

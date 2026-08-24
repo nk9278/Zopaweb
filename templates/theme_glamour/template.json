@@ -8,6 +8,59 @@
     "supports": {
         "hero": true,
         "gallery": true,
-        "services": true
+        "services": true,
+        "theme": {
+            "colors": true,
+            "typography": true,
+            "buttons": true,
+            "cards": true,
+            "hero_variants": [
+                "image_left",
+                "full_width"
+            ],
+            "navigation_variants": [
+                "logo_left",
+                "logo_center"
+            ]
+        },
+        "sections": {
+            "hero": true,
+            "about": true,
+            "services": true,
+            "gallery": true,
+            "reviews": true,
+            "cta": true,
+            "contact": true,
+            "lead_form": true
+        }
+    },
+    "theme_defaults": {
+        "colors": {
+            "primary_color": "#e63946",
+            "background_color": "#121212",
+            "surface_color": "#1e1e1e",
+            "text_color": "#e0e0e0",
+            "heading_color": "#ffffff",
+            "muted_color": "#aaaaaa",
+            "border_color": "#333333",
+            "button_color": "#e63946",
+            "button_text_color": "#ffffff"
+        },
+        "typography": {
+            "heading_font": "Montserrat",
+            "body_font": "Inter",
+            "heading_scale": "Medium",
+            "body_scale": "Medium"
+        },
+        "styles": {
+            "button_style": "Sharp",
+            "border_radius": "Sharp",
+            "shadow_style": "None",
+            "card_style": "Flat"
+        },
+        "layouts": {
+            "hero_variant": "image_left",
+            "navigation_variant": "logo_left"
+        }
     }
 }

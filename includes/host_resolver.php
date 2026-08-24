@@ -81,6 +81,7 @@ function resolveWebsiteFromHost($pdo, $host) {
             'status' => $website['status'],
             'publication_status' => $website['publication_status'],
             'subscription_status' => $website['subscription_status'],
+            'website_slug' => $slug,
             'context' => 'subdomain'
         ];
     }
@@ -96,7 +97,7 @@ function resolveWebsiteFromHost($pdo, $host) {
             return ['error' => 'domain_inactive', 'website_id' => null, 'context' => 'custom'];
         }
 
-        $w_stmt = $pdo->prepare("SELECT id, status, publication_status, subscription_status FROM websites WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+        $w_stmt = $pdo->prepare("SELECT id, status, publication_status, subscription_status, website_slug FROM websites WHERE id = ? AND deleted_at IS NULL LIMIT 1");
         $w_stmt->execute([$custom_domain['website_id']]);
         $website = $w_stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -107,6 +108,8 @@ function resolveWebsiteFromHost($pdo, $host) {
                 'status' => $website['status'],
                 'publication_status' => $website['publication_status'],
                 'subscription_status' => $website['subscription_status'],
+                'website_slug' => $website['website_slug'], // Provide slug explicitly back to index.php
+                'custom_domain' => $normalized_host, // Flag that it was loaded via custom domain
                 'context' => 'custom'
             ];
         }

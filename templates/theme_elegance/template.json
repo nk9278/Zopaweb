@@ -9,6 +9,59 @@
         "hero": true,
         "services": true,
         "gallery": true,
-        "reviews": true
+        "reviews": true,
+        "theme": {
+            "colors": true,
+            "typography": true,
+            "buttons": true,
+            "cards": true,
+            "hero_variants": [
+                "centered",
+                "overlay"
+            ],
+            "navigation_variants": [
+                "minimal",
+                "sticky"
+            ]
+        },
+        "sections": {
+            "hero": true,
+            "about": true,
+            "services": true,
+            "gallery": true,
+            "reviews": true,
+            "cta": true,
+            "contact": true,
+            "lead_form": true
+        }
+    },
+    "theme_defaults": {
+        "colors": {
+            "primary_color": "#cda894",
+            "background_color": "#fdfdfd",
+            "surface_color": "#ffffff",
+            "text_color": "#333333",
+            "heading_color": "#1a1a1a",
+            "muted_color": "#666666",
+            "border_color": "#f0f0f0",
+            "button_color": "#cda894",
+            "button_text_color": "#ffffff"
+        },
+        "typography": {
+            "heading_font": "Playfair Display",
+            "body_font": "Lato",
+            "heading_scale": "Medium",
+            "body_scale": "Medium"
+        },
+        "styles": {
+            "button_style": "Sharp",
+            "border_radius": "Sharp",
+            "shadow_style": "Subtle",
+            "card_style": "Bordered"
+        },
+        "layouts": {
+            "hero_variant": "overlay",
+            "navigation_variant": "minimal"
+        }
     }
 }
