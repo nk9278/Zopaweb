@@ -84,9 +84,13 @@ $path = str_replace(['/public/index.php', '/index.php'], '', $path);
 $path = rtrim($path, '/');
 
 // Determine base URL securely using the resolved slug and application platform config
+// Determine base URL securely using the resolved slug and application platform config
 $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
-// In a real app this platform domain would be in config/app.php
-$base_url = "https://web." . $resolution['website_slug'] . ".zopaweb.com";
+if (!empty($resolution['custom_domain'])) {
+    $base_url = $protocol . $resolution['custom_domain'];
+} else {
+    $base_url = $protocol . "web." . ($resolution['website_slug'] ?? 'demo') . ".zopaweb.com";
+}
 
 
 if ($path === '/robots.txt') {

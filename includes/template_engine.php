@@ -328,8 +328,18 @@ function render_page($template, $data, $page_slug = 'home') {
 
     // Base URL structure securely derived from database slug
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https://" : "http://";
-    $website_slug = $data['site']['website_slug'] ?? 'demo';
-    $base_url = "https://web.{$website_slug}.zopaweb.com";
+
+    // Check if site has an active custom domain in DB mapping
+    $dom_stmt = $pdo->prepare("SELECT domain_name FROM domains WHERE website_id = ? AND domain_type = 'custom' AND status = 'active' LIMIT 1");
+    $dom_stmt->execute([$website_id]);
+    $active_domain = $dom_stmt->fetchColumn();
+
+    if ($active_domain) {
+        $base_url = $protocol . $active_domain;
+    } else {
+        $website_slug = $data['site']['website_slug'] ?? 'demo';
+        $base_url = "https://web.{$website_slug}.zopaweb.com";
+    }
 
     // Determine Page Image
     $page_image_url = null;
