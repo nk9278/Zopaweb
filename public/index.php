@@ -82,7 +82,7 @@ if (!$data || empty($data['template'])) {
 $request_uri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($request_uri, PHP_URL_PATH);
 
-// Clean up path (e.g., "/public/index.php/about" -> "/about")
+// Clean up path (e.g., "/index.php/about" -> "/about")
 $path = str_replace(['/public/index.php', '/index.php'], '', $path);
 $path = trim($path, '/');
 

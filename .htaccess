@@ -1,7 +1,14 @@
 # Protect core and sensitive directories if deployed at project root
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Block sensitive directories
     RewriteRule ^(config|database|includes|admin/includes|storage|logs|backups)(/.*)?$ - [F,L]
+
+    # Front Controller: Route all requests that are not actual files or directories to index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L]
 </IfModule>
 
 # Block directory listings
