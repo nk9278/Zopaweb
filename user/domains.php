@@ -212,10 +212,12 @@ include __DIR__ . '/../includes/user_header.php';
                             <?php
                             if (!empty($_GET['search_domain'])) {
                                 // Integration Check
-                                $token_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'hostinger_api_token'");
-                                $api_token = $token_stmt->fetchColumn() ?: '';
+                                $settings_stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('hostinger_api_token', 'hostinger_status')");
+                                $sys_settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                                $api_token = $sys_settings['hostinger_api_token'] ?? '';
+                                $api_status = $sys_settings['hostinger_status'] ?? 'disabled';
 
-                                if (empty($api_token)) {
+                                if (empty($api_token) || $api_status !== 'enabled') {
                                     echo '<div class="alert alert-light text-dark mt-4 text-start"><strong>Notice:</strong> Domain availability search is currently disabled by the platform administrator.</div>';
                                 } else {
                                     $client = new HostingerClient($api_token);

@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'save_token') {
         $token = trim($_POST['hostinger_api_token'] ?? '');
         $status = $_POST['hostinger_status'] ?? 'disabled';
+        $name = trim($_POST['hostinger_integration_name'] ?? 'Hostinger Production');
 
         // Preserve existing token if blank
         if (empty($token)) {
@@ -55,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Basic mask trick for storage if we don't have an encryption layer; ideally this is encrypted via libsodium/openssl.
         $stmt->execute(['hostinger_api_token', $token]);
         $stmt->execute(['hostinger_status', $status]);
+        $stmt->execute(['hostinger_integration_name', $name]);
 
     } elseif ($action === 'test_connection') {
         $token_stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'hostinger_api_token'");
@@ -74,12 +76,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch current settings
-$stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('hostinger_api_token', 'hostinger_status')");
+$stmt = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('hostinger_api_token', 'hostinger_status', 'hostinger_integration_name')");
 $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 $token = $settings['hostinger_api_token'] ?? '';
 $masked_token = !empty($token) ? '****************' . substr($token, -4) : '';
 $status = $settings['hostinger_status'] ?? 'disabled';
+$integration_name = $settings['hostinger_integration_name'] ?? 'Hostinger Production';
 
 $page_title = "Hostinger Integration";
 include __DIR__ . '/../includes/admin_header.php';
@@ -103,6 +106,12 @@ include __DIR__ . '/../includes/admin_header.php';
                 <form method="POST">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="save_token">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Integration Name</label>
+                        <input type="text" name="hostinger_integration_name" class="form-control" value="<?= escape($integration_name) ?>">
+                        <div class="form-text">Internal label for administrative purposes.</div>
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-medium">Integration Status</label>

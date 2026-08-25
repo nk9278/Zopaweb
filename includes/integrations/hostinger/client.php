@@ -28,9 +28,45 @@ class HostingerClient {
             return $this->mock_router($endpoint, $method, $data);
         }
 
-        // Real environment execution placeholder
-        // In a true environment, this would utilize curl_exec() with proper timeouts
-        return ['success' => false, 'error' => 'API Endpoint is not fully implemented in this deployment phase.'];
+        // Real HTTP Client Execution
+        $ch = curl_init();
+        $url = $this->api_url . $endpoint;
+
+        $headers = [
+            'Authorization: Bearer ' . $this->token,
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ];
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($error) {
+            return ['success' => false, 'error' => 'Network error connecting to provider.'];
+        }
+
+        $decoded = json_decode($response, true);
+
+        // Hostinger specific error structure handling (generic mapping for safety)
+        if ($http_code >= 400) {
+            $msg = $decoded['message'] ?? $decoded['error'] ?? 'API request failed.';
+            // Do not leak raw tokens or stack traces
+            return ['success' => false, 'error' => $msg];
+        }
+
+        return ['success' => true, 'data' => $decoded];
     }
 
     /**
@@ -39,6 +75,17 @@ class HostingerClient {
     public function test_connection() {
         // Assume /account or /ping endpoint for validation
         return $this->request('/account', 'GET');
+    }
+
+    /**
+     * Get DNS Records for a Domain
+     */
+    public function get_dns_records($domain) {
+        $clean_domain = strtolower(trim($domain));
+        if (empty($clean_domain)) {
+            return ['success' => false, 'error' => 'Domain parameter missing.'];
+        }
+        return $this->request('/dns/zones/' . urlencode($clean_domain) . '/records', 'GET');
     }
 
     /**
@@ -60,6 +107,16 @@ class HostingerClient {
     private function mock_router($endpoint, $method, $data) {
         if (strpos($endpoint, '/account') === 0) {
             return ['success' => true, 'data' => ['status' => 'active', 'id' => 12345]];
+        }
+
+        if (strpos($endpoint, '/dns/zones/') === 0) {
+            return [
+                'success' => true,
+                'data' => [
+                    ['id' => '1', 'type' => 'A', 'name' => '@', 'content' => '192.168.1.1', 'ttl' => 3600],
+                    ['id' => '2', 'type' => 'CNAME', 'name' => 'www', 'content' => 'example.com', 'ttl' => 3600]
+                ]
+            ];
         }
 
         if (strpos($endpoint, '/domains/search') === 0) {

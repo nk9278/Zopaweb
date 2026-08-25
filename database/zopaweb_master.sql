@@ -138,6 +138,10 @@ CREATE TABLE `domains` (
   `verification_token` varchar(255) DEFAULT NULL,
   `verification_status` enum('unverified','verified','failed') NOT NULL DEFAULT 'unverified',
   `registrar` varchar(255) DEFAULT NULL,
+  `provider` varchar(50) DEFAULT 'manual',
+  `provider_domain_id` varchar(255) DEFAULT NULL,
+  `provider_status` varchar(50) DEFAULT NULL,
+  `provider_order_id` varchar(255) DEFAULT NULL,
   `registration_price` decimal(10,2) DEFAULT NULL,
   `renewal_price` decimal(10,2) DEFAULT NULL,
   `status` enum('pending','active','expired','failed') NOT NULL DEFAULT 'pending',
@@ -494,7 +498,5 @@ ALTER TABLE `website_seo` ADD CONSTRAINT `website_seo_ibfk_1` FOREIGN KEY (`webs
 
 
 
-
-ALTER TABLE `domains` ADD COLUMN `provider` varchar(50) DEFAULT 'manual' AFTER `registrar`, ADD COLUMN `provider_domain_id` varchar(255) DEFAULT NULL AFTER `provider`, ADD COLUMN `provider_status` varchar(50) DEFAULT NULL AFTER `provider_domain_id`, ADD COLUMN `provider_order_id` varchar(255) DEFAULT NULL AFTER `provider_status`;
 
 COMMIT;
