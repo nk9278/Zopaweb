@@ -34,7 +34,7 @@ if (APP_ENV === 'development') {
 }
 
 // R4 Media Architecture Configuration
-define('STORAGE_ROOT', realpath(__DIR__ . '/../storage/websites'));
+define('STORAGE_ROOT', __DIR__ . '/../storage/websites');
 define('MAX_IMAGE_SIZE_MB', 5);
 define('MAX_VIDEO_SIZE_MB', 50);
 define('MAX_IMAGE_DIMENSION', 2048);
