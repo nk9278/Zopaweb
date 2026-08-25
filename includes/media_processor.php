@@ -135,7 +135,6 @@ function process_media_upload($pdo, $website_id, $file_array) {
                         case 'image/jpeg': imagejpeg($resized_gd, $final_path, WEBP_QUALITY); break;
                         case 'image/png':  imagepng($resized_gd, $final_path, 8); break; // 0-9 scale
                         case 'image/webp': imagewebp($resized_gd, $final_path, WEBP_QUALITY); break;
-                        case 'image/gif':  imagegif($resized_gd, $final_path); break;
                     }
                     $width = $new_w;
                     $height = $new_h;

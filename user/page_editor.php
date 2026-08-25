@@ -72,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($adjacent) {
                 // Swap sort_order
-                $pdo->prepare("UPDATE page_sections SET sort_order=? WHERE id=? AND page_id=? AND website_id=?")->execute([$adjacent['sort_order'], $current['id'], $page_id, $website_id]);
-                $pdo->prepare("UPDATE page_sections SET sort_order=? WHERE id=? AND page_id=? AND website_id=?")->execute([$current['sort_order'], $adjacent['id'], $page_id, $website_id]);
+                $pdo->prepare("UPDATE page_sections SET sort_order=? WHERE id=?")->execute([$adjacent['sort_order'], $current['id']]);
+                $pdo->prepare("UPDATE page_sections SET sort_order=? WHERE id=?")->execute([$current['sort_order'], $adjacent['id']]);
                 set_flash_message('success', 'Section reordered.');
             }
         }
@@ -110,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $json_payload = json_encode($content_data);
-            $update = $pdo->prepare("UPDATE page_sections SET content = ? WHERE id = ? AND page_id = ? AND website_id = ?");
-            $update->execute([$json_payload, $section_id, $page_id, $website_id]);
+            $update = $pdo->prepare("UPDATE page_sections SET content = ? WHERE id = ?");
+            $update->execute([$json_payload, $section_id]);
             set_flash_message('success', 'Section content saved.');
         }
     }

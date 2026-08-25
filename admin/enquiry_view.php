@@ -10,27 +10,27 @@ $pdo = getDB();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['enquiry_id'])) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
         set_flash_message('error', 'Invalid security token.');
-        redirect('/admin/leads.php');
+        redirect('/admin/enquiries.php');
     }
 
     $enquiry_id = (int)$_POST['enquiry_id'];
     $status = $_POST['status'] ?? '';
 
-    $valid_statuses = ['new', 'contacted', 'converted', 'closed', 'spam'];
+    $valid_statuses = ['new', 'contacted', 'booked', 'closed', 'spam'];
     if (in_array($status, $valid_statuses)) {
-        $stmt = $pdo->prepare("UPDATE leads SET status = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE enquiries SET status = ? WHERE id = ?");
         $stmt->execute([$status, $enquiry_id]);
         set_flash_message('success', 'Enquiry status updated.');
     }
 
-    redirect('/admin/lead_view.php?id=' . $enquiry_id);
+    redirect('/admin/enquiry_view.php?id=' . $enquiry_id);
 }
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $stmt = $pdo->prepare("
     SELECT e.*, w.website_name, u.name as owner_name, u.id as owner_id
-    FROM leads e
+    FROM enquiries e
     JOIN websites w ON e.website_id = w.id
     JOIN users u ON w.user_id = u.id
     WHERE e.id = ?
@@ -40,7 +40,7 @@ $enquiry = $stmt->fetch();
 
 if (!$enquiry) {
     set_flash_message('error', 'Enquiry not found.');
-    redirect('/admin/leads.php');
+    redirect('/admin/enquiries.php');
 }
 
 ?>

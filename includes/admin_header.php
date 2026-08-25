@@ -101,7 +101,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                 <li class="nav-item mt-3 mb-1"><small class="text-uppercase text-secondary fw-bold px-3">System</small></li>
                 <li>
-                    <a href="/admin/leads.php" class="nav-link <?= strpos($current_page, 'enquir') !== false ? 'active' : 'text-white' ?>">
+                    <a href="/admin/enquiries.php" class="nav-link <?= strpos($current_page, 'enquir') !== false ? 'active' : 'text-white' ?>">
                         <i class="bi bi-envelope"></i>
                         <span>Enquiries</span>
                     </a>
@@ -113,15 +113,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </a>
                 </li>
                 <li>
-                    <a href="/admin/settings.php" class="nav-link <?= strpos($current_page, 'settings') !== false && strpos($current_page, 'integrations_hostinger') === false ? 'active' : 'text-white' ?>">
+                    <a href="/admin/settings.php" class="nav-link <?= strpos($current_page, 'settings') !== false ? 'active' : 'text-white' ?>">
                         <i class="bi bi-gear"></i>
                         <span>Settings</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/admin/integrations_hostinger.php" class="nav-link <?= strpos($current_page, 'integrations_hostinger') !== false ? 'active' : 'text-white' ?>">
-                        <i class="bi bi-hdd-network"></i>
-                        <span>Hostinger</span>
                     </a>
                 </li>
             </ul>

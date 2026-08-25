@@ -258,7 +258,7 @@ $recent_enquiries = $pdo->query("
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold">Recent Enquiries</h6>
-                <a href="/admin/leads.php" class="btn btn-sm btn-outline-primary">View All</a>
+                <a href="/admin/enquiries.php" class="btn btn-sm btn-outline-primary">View All</a>
             </div>
             <div class="card-body">
                 <?php if (count($recent_enquiries) > 0): ?>
@@ -283,7 +283,7 @@ $recent_enquiries = $pdo->query("
                                         <td><span class="badge bg-light text-dark border"><?= escape(ucfirst($e['status'])) ?></span></td>
                                         <td><span class="small"><?= date('M d, Y', strtotime($e['created_at'])) ?></span></td>
                                         <td class="text-end">
-                                            <a href="/admin/lead_view.php?id=<?= $e['id'] ?>" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
+                                            <a href="/admin/enquiry_view.php?id=<?= $e['id'] ?>" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update = $pdo->prepare("UPDATE business_profiles SET business_name=?, tagline=?, about=?, email=?, phone=?, whatsapp=?, address=?, city=?, logo_media_id=?, hero_media_id=? WHERE website_id=?");
             $update->execute([$business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id, $website_id]);
         } else {
-            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city, logo_media_id, hero_media_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $insert = $pdo->prepare("INSERT INTO business_profiles (website_id, business_name, tagline, about, email, phone, whatsapp, address, city, logo_media_id, hero_media_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $insert->execute([$website_id, $business_name, $tagline, $about, $email, $phone, $whatsapp, $address, $city, $logo_media_id, $hero_media_id]);
         }
         set_flash_message('success', 'Business profile saved successfully.');
@@ -102,9 +102,8 @@ include __DIR__ . '/../includes/user_header.php';
                     <input type="text" name="phone" class="form-control" value="<?= escape($profile['phone'] ?? '') ?>">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-medium">WhatsApp Number</label>
+                    <label class="form-label fw-medium">WhatsApp</label>
                     <input type="text" name="whatsapp" class="form-control" value="<?= escape($profile['whatsapp'] ?? '') ?>" placeholder="+91 XXXXX XXXXX">
-                    <small class="text-muted d-block mt-1">Add your WhatsApp number so customers can contact you directly.</small>
                 </div>
 
                 <div class="col-md-8">

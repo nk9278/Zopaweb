@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <?php
-    require_once __DIR__ . '/../../includes/seo.php';
+    require_once __DIR__ . '/../../../includes/seo.php';
     echo generate_seo_head($engine['data']);
     ?>
 

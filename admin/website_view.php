@@ -34,8 +34,8 @@ $d_stmt = $pdo->prepare("SELECT * FROM domains WHERE website_id = ? ORDER BY id 
 $d_stmt->execute([$website_id]);
 $domains = $d_stmt->fetchAll();
 
-// Fetch enquiries (now leads)
-$e_stmt = $pdo->prepare("SELECT * FROM leads WHERE website_id = ? ORDER BY id DESC LIMIT 10");
+// Fetch enquiries
+$e_stmt = $pdo->prepare("SELECT * FROM enquiries WHERE website_id = ? ORDER BY id DESC LIMIT 10");
 $e_stmt->execute([$website_id]);
 $enquiries = $e_stmt->fetchAll();
 

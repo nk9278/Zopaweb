@@ -19,7 +19,7 @@ $where_sql = "WHERE 1=1";
 $params = [];
 
 if ($search) {
-    $where_sql .= " AND (e.name LIKE ? OR w.website_name LIKE ? OR e.phone LIKE ?)";
+    $where_sql .= " AND (e.name LIKE ? OR w.website_name LIKE ? OR e.service LIKE ?)";
     $params[] = "%$search%";
     $params[] = "%$search%";
     $params[] = "%$search%";
@@ -31,7 +31,7 @@ if ($status_filter) {
 }
 
 $count_stmt = $pdo->prepare("
-    SELECT COUNT(*) FROM leads e
+    SELECT COUNT(*) FROM enquiries e
     JOIN websites w ON e.website_id = w.id
     $where_sql
 ");
@@ -41,7 +41,7 @@ $total_pages = ceil($total_records / $limit);
 
 $query = "
     SELECT e.*, w.website_name
-    FROM leads e
+    FROM enquiries e
     JOIN websites w ON e.website_id = w.id
     $where_sql
     ORDER BY e.id DESC

@@ -96,15 +96,11 @@ include __DIR__ . '/../includes/user_header.php';
 <div class="row">
     <?php if (empty($links)): ?>
         <div class="col-12">
-            <div class="card border-0 shadow-sm p-5 text-center bg-light">
-                <i class="bi bi-share display-1 text-primary mb-3"></i>
-                <h4 class="fw-bold">No social links yet</h4>
-                <p class="text-muted mb-4">Connect your social media profiles to grow your audience.</p>
-                <div>
-                    <button type="button" class="btn btn-primary px-4 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#addLinkModal">
-                        <i class="bi bi-plus-lg me-2"></i>Add Social Link
-                    </button>
-                </div>
+            <div class="card border-0 shadow-sm p-5 text-center">
+                <i class="bi bi-share display-4 text-muted mb-3"></i>
+                <h5>No social links yet.</h5>
+                <p class="text-muted">Connect your social media profiles.</p>
+                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addLinkModal">Add Link</button>
             </div>
         </div>
     <?php else: ?>

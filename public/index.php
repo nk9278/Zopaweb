@@ -10,11 +10,6 @@ require_once __DIR__ . '/../includes/template_engine.php';
 require_once __DIR__ . '/../includes/host_resolver.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Apply basic security headers safely without breaking template styles
-header("X-Content-Type-Options: nosniff");
-header("X-Frame-Options: SAMEORIGIN");
-header("Referrer-Policy: strict-origin-when-cross-origin");
-
 $pdo = getDB();
 $host = $_SERVER['HTTP_HOST'] ?? '';
 
