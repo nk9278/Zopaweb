@@ -32,3 +32,23 @@ if (APP_ENV === 'development') {
     ini_set('log_errors', 1);
     ini_set('error_log', __DIR__ . '/../storage/logs/php_error.log');
 }
+
+// R4 Media Architecture Configuration
+define('STORAGE_ROOT', realpath(__DIR__ . '/../storage/websites'));
+define('MAX_IMAGE_SIZE_MB', 5);
+define('MAX_VIDEO_SIZE_MB', 50);
+define('MAX_IMAGE_DIMENSION', 2048);
+define('THUMBNAIL_WIDTH', 400);
+define('WEBP_QUALITY', 80);
+
+define('ALLOWED_IMAGE_MIMES', [
+    'image/jpeg' => 'jpg',
+    'image/png'  => 'png',
+    'image/webp' => 'webp',
+    'image/gif'  => 'gif'
+]);
+
+define('ALLOWED_VIDEO_MIMES', [
+    'video/mp4'  => 'mp4',
+    'video/webm' => 'webm'
+]);
