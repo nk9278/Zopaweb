@@ -101,7 +101,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                 <li class="nav-item mt-3 mb-1"><small class="text-uppercase text-secondary fw-bold px-3">System</small></li>
                 <li>
-                    <a href="/admin/enquiries.php" class="nav-link <?= strpos($current_page, 'enquir') !== false ? 'active' : 'text-white' ?>">
+                    <a href="/admin/leads.php" class="nav-link <?= strpos($current_page, 'enquir') !== false ? 'active' : 'text-white' ?>">
                         <i class="bi bi-envelope"></i>
                         <span>Enquiries</span>
                     </a>

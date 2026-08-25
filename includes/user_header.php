@@ -24,6 +24,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/user/profile.php">Profile</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user/legal.php">Legal Pages</a>
+                </li>
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item dropdown">
